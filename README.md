@@ -8,14 +8,14 @@ This repository contains the soure code of the LaganLighter project: https://blo
 
 
 ## How Does It Work?
-[LaganLighter source code documentation](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter-Source-Code-Documentation).
+[LaganLighter source code documentation](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter-Source-Code)
 
 ## Requirements
 The `libnuma`, `openmp`, and `papi` are required.
 
 ## Compiling and Executing Code
- - If you want to use special version of `gcc` compiler please modify Line 1 of the `Makefile`.
- - Please modify Line 6 if the required libraries are not in the path.
+ - If you want to use a special version of `gcc` compiler, please modify Line 1 of the `Makefile`.
+ - Please modify Line 6, if the required libraries are not in the path.
  - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the argument.
  - To disable hyper-threading, please use `no_ht=1` with make.
  - To enable debugging (-g of gcc), use `debug=1`.
