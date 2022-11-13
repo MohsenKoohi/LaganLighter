@@ -2,8 +2,28 @@
 
 This repository contains the soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .
 
+## Algorithms in This Repo
+ - [SAPCo Sort](https://blogs.qub.ac.uk/graphprocessing/sapco-sort-optimizing-degree-ordering-for-power-law-graphs/): `alg1_sapco_sort` 
+ - Other algorithms are going to be added soon. 
+
 ## Requirements
 The `libnuma`, `openmp`, and `papi` are required.
+
+## Compiling and Executing Code
+ - If you want to use special version of `gcc` compiler please modify Line 1 of the `Makefile`.
+ - Please modify Line 6 if the required libraries are not in the path.
+ - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the argument.
+ - To disable hyper-threading, please use `no_ht=1` with make.
+ - To enable debugging (-g of gcc), use `debug=1`.
+
+## Graph Types
+We support different types of the graphs:
+ - Graphs in txt format, for testing, e.g. `data/test_csr.txt`
+ - [WebGraph](https://law.di.unimi.it/datasets.php) format
+ - Binary format
+
+## Bugs & Support
+As ``We write bugs that in special cases work correctly``, we always try to evaluate and validate the algorithms and implementation. If you have received wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter). 
 
 ## Fundings
 The project LaganLighter leading to this Software has been supported by:
