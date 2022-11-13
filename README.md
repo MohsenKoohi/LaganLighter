@@ -2,7 +2,10 @@
 
 This repository contains the soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .
 
-## Funds
+## Requirements
+The `libnuma`, `openmp`, and `papi` are required.
+
+## Fundings
 The project LaganLighter leading to this Software has been supported by:
  - PhD scholarship from The Department for the Economy, Northern Ireland and The Queen’s University Belfast 
  - Kelvin-2 supercomputer (EPSRC grant EP/T022175/1) 
