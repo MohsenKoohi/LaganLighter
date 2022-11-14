@@ -820,28 +820,5 @@ struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int 
 	return out_graph;
 }
 
-int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int vertices_count)
-{
-	int res= 1;
-	unsigned char* counts= numa_alloc_interleaved(sizeof(unsigned char) * (vertices_count));
-	assert(counts != NULL);
-	
-	#pragma omp parallel for 
-	for(unsigned int v=0; v < vertices_count; v++)
-	{
-		unsigned char t = __atomic_fetch_add(&counts[RA[v]], 1U, __ATOMIC_RELAXED);
-		if(t != 0)
-		{
-			printf("v: %'u \t RA[v]: %'u \t counts:%'u\n",v,RA[v], t);
-			res = 0;
-		}
-		assert(t == 0);
-	}
-
-	numa_free(counts, sizeof(unsigned char) * (vertices_count));
-	counts = NULL;
-
-	return res;
-}
 
 #endif
