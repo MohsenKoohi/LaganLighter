@@ -1,5 +1,5 @@
-#ifndef __OPERATIONS_C
-#define __OPERATIONS_C
+#ifndef __TRANS_C
+#define __TRANS_C
 
 #include <unistd.h>
 #include <errno.h>

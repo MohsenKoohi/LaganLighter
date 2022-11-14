@@ -27,7 +27,7 @@ We support different types of the graphs:
  - Binary format
 
 ## Bugs & Support
-As "We write bugs that in special cases work correctly", we always try to evaluate and validate the algorithms and implementation. If you have received wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
+As "we write bugs that in special cases work correctly", we always try to evaluate and validate the algorithms and implementation. If you have received wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
 
 ## Fundings
 The project LaganLighter leading to this Software has been supported by:

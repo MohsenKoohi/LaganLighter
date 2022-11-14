@@ -1,6 +1,6 @@
 #include "aux.c"
 #include "graph.c"
-#include "operations.c"
+#include "trans.c"
 
 /*
 	SAPCO Sort: Structure-Aware Parallel Counting Sort
