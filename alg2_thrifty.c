@@ -3,6 +3,25 @@
 #include "trans.c"
 #include "cc.c"
 
+/*
+	Thrifty Label Propagation Connected Components
+
+	https://blogs.qub.ac.uk/graphprocessing/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/
+
+	@INPROCEEDINGS{10.1109/Cluster48925.2021.00042,
+	  author={Koohi Esfahani, Mohsen and Kilpatrick, Peter and Vandierendonck, Hans},
+	  booktitle={2021 IEEE International Conference on Cluster Computing (CLUSTER)}, 
+	  title={Thrifty Label Propagation: Fast Connected Components for Skewed-Degree Graphs}, 
+	  year={2021},
+	  volume={},
+	  number={},
+	  pages={226-237},
+	  publisher={IEEE Computer Society},
+	  doi={10.1109/Cluster48925.2021.00042}
+	}
+
+*/
+
 int main(int argc, char** args)
 {	
 	char* dataset = "data/test_csr.txt";
