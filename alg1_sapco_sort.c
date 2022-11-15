@@ -23,8 +23,8 @@ int main(int argc, char** args)
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
 
-	unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
-	assert(exec_info != NULL);
+		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
+		assert(exec_info != NULL);
 
 	// Retrieving the graph
 		struct ll_graph* csr_graph = graph;

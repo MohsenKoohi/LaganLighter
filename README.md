@@ -1,6 +1,6 @@
 # [LaganLighter:  Structure-Aware High-Performance Graph Algorithms](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter/)
 
-This repository contains the soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .
+This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .   
 
 ## Algorithms in This Repo
  - [SAPCo Sort](https://blogs.qub.ac.uk/GraphProcessing/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort` 
@@ -41,4 +41,4 @@ The project LaganLighter leading to this Software has been supported by:
 ## License
 Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. You must not use this Software except in compliance with the terms of the License. Unless required by applicable law or agreed upon in writing, this Software is distributed on an "AS IS" BASIS, WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE, neither express nor implied. For details see terms of the License (see attached file: LICENSE). 
 
-#### Copyright 2019-2022 The Queen's University of Belfast, Northern Ireland
+#### Copyright 2019-2022 The Queen's University of Belfast, Northern Ireland, UK
