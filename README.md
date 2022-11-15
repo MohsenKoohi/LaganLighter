@@ -4,6 +4,8 @@ This repository contains the soure code of the LaganLighter project: https://blo
 
 ## Algorithms in This Repo
  - [SAPCo Sort](https://blogs.qub.ac.uk/GraphProcessing/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort` 
+ - [Thrifty Label Propagation Connected Components](https://blogs.qub.ac.uk/graphprocessing/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/): `alg2_thrifty`
+
  - Other algorithms are going to be added soon. 
 
 
@@ -21,7 +23,7 @@ The `libnuma`, `openmp`, and `papi` are required.
  - To enable debugging (-g of gcc), use `debug=1`.
 
 ## Graph Types
-We support different types of the graphs:
+LaganLighter supports  the following graph formats:
  - CSR/CSC graph in text format, for testing, e.g. `data/test_csr.txt`. This format has 4 lines: |V|, |E|, |V| space-separated offsets, and |E| space-separated edges, respectively.  
  - CSR [WebGraph](https://law.di.unimi.it/datasets.php) format
  - CSR/CSC binary format
@@ -36,7 +38,7 @@ The project LaganLighter leading to this Software has been supported by:
  - Kelvin-2 supercomputer (EPSRC grant EP/T022175/1) 
  - DiPET (CHIST-ERA-18-SDCDN-002, EPSRC grant EP/T022345/1) 
 
-## LICENSE
+## License
 Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. You must not use this Software except in compliance with the terms of the License. Unless required by applicable law or agreed upon in writing, this Software is distributed on an "AS IS" BASIS, WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE, neither express nor implied. For details see terms of the License (see attached file: LICENSE). 
 
 #### Copyright 2019-2022 The Queen's University of Belfast, Northern Ireland

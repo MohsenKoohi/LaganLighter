@@ -27,6 +27,17 @@ struct ll_graph
 	unsigned int* edges_list;
 };
 
+// 4 bytes weight per edge
+// each edge has two unsigned int elements in the edges_list, 
+// the first one is the destination/source, and 
+// the second one is the weight
+struct w4_graph
+{
+	unsigned long vertices_count;
+	unsigned long edges_count;
+	unsigned long* offsets_list;
+	unsigned int* edges_list;
+};
 
 void print_graph(struct ll_graph* ret)
 {
