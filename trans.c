@@ -821,4 +821,187 @@ struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int 
 }
 
 
+
+/* 
+	Add random weights to the graph
+
+	Note that the neighbour lists are not sorted
+	
+	Flags:
+		0 : validate
+
+*/
+struct w4_graph* add_4B_weight_to_graph(struct par_env* pe, struct ll_graph* g, unsigned int max_weight, unsigned int flags)
+{
+	assert(pe != NULL && g != NULL && max_weight != 0);
+	printf("\n\033[3;36madd_4B_weight_to_graph\033[0;37m, wieght_val: \033[3;36m%'u\033[0;37m .\n",  max_weight);
+
+	unsigned long tt = - get_nano_time();
+
+	// Memory allocation
+		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
+		assert(ttimes != NULL);
+	
+	// Creating graph
+		struct w4_graph* graph =calloc(sizeof(struct w4_graph),1);
+		assert(graph != NULL);
+		graph->vertices_count = g->vertices_count;
+		graph->edges_count = g->edges_count;
+		graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long)*(1 + g->vertices_count));
+		assert(graph->offsets_list != NULL);
+		graph->edges_list = numa_alloc_interleaved(2 * sizeof(unsigned int) * g->edges_count);
+		assert(graph->edges_list != NULL);
+	
+	// Assigning weights
+		// Assign weights for neighbours of each vertex with IDs smaller than the ID of that vertex 
+			unsigned long mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				#pragma omp for nowait
+				for(unsigned int v=0; v < graph->vertices_count; v++)
+				{
+					unsigned long e = g->offsets_list[v];
+					for(; e < g->offsets_list[v+1]; e++)
+					{
+						if(g->edges_list[e] > v)
+							break;
+
+						graph->edges_list[2 * e] = g->edges_list[e];
+						graph->edges_list[2 * e + 1] = 1 + (rand() % max_weight);
+					}
+					graph->offsets_list[v] = e;
+				}
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			PTIP("Step 1: Assigning weights");
+		
+
+		// Writing the weights for symmetric edges of each vertex with neighbour ID > vertex ID
+			mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				
+				#pragma omp for nowait schedule(static, 8)
+				for(unsigned int v=0; v < graph->vertices_count; v++)
+					for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v+1]; e++)
+					{
+						if(g->edges_list[e] >= v)
+							break;
+
+						unsigned int neighbour = (unsigned int)g->edges_list[e];
+						// assert(graph->edges_list[2 * e] == neighbour);
+						unsigned long neighbour_offset = __atomic_fetch_add(&graph->offsets_list[neighbour], 1U, __ATOMIC_RELAXED);
+						// assert(neighbour_offset < g->offsets_list[neighbour + 1]);
+
+						graph->edges_list[2 * neighbour_offset] = v;
+						graph->edges_list[2 * neighbour_offset + 1] = graph->edges_list[2 * e + 1];
+					}
+				
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			PTIP("Step 2: Symmetrizing weights");
+		
+		// Validation
+			if(flags & 1U)
+			{
+				#pragma omp parallel for 
+				for(unsigned int v=0; v < graph->vertices_count; v++)
+					assert(graph->offsets_list[v] == g->offsets_list[v+1]);
+
+				#pragma omp parallel for 
+				for(unsigned int v=0; v < graph->vertices_count; v++)
+					for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v+1]; e++)
+					{
+						if(g->edges_list[e] >= v)
+							break;
+
+						unsigned int neighbour = g->edges_list[e];
+						assert(graph->edges_list[2 * e] == neighbour);
+						
+						unsigned int found = 0;
+						for(unsigned long e2 = g->offsets_list[neighbour]; e2 < g->offsets_list[neighbour + 1]; e2++)
+							if(graph->edges_list[2 * e2] == v)
+							{
+								assert(graph->edges_list[2 * e2 + 1] == graph->edges_list[2 * e + 1]);
+								found = 1;
+								break;
+							}
+
+						assert(found == 1);
+					}
+
+				printf("Validated.\n");
+			}
+	
+
+	// Setting the offsets
+		#pragma omp parallel for 
+		for(unsigned int v=0; v <= graph->vertices_count; v++)
+		graph->offsets_list[v] = g->offsets_list[v];
+
+	// Free mem
+		free(ttimes);
+		ttimes = NULL;
+
+	// Finialzing
+		tt += get_nano_time();
+		printf("%-20s \t\t\t %'.3f (s)\n","Total time:", tt/1e9);
+
+		print_graph((struct ll_graph*)graph);
+		
+	return graph;
+}
+
+void release_w4_graph(struct w4_graph* g)
+{
+	numa_free(g->offsets_list, sizeof(unsigned long)*(1 + g->vertices_count));
+	g->offsets_list = NULL;
+
+	numa_free(g->edges_list, 2 * sizeof(unsigned int) * g->edges_count);
+	g->edges_list = NULL;
+
+	free(g);
+	g = NULL;
+
+	return;
+}
+
+struct w4_graph* copy_w4_graph(struct par_env* pe, struct w4_graph* in, struct w4_graph* out)
+{
+	if(out == NULL)
+	{
+		out =calloc(sizeof(struct w4_graph),1);
+		assert(out != NULL);
+		out->vertices_count = in->vertices_count;
+		out->edges_count = in->edges_count;
+		out->offsets_list = numa_alloc_interleaved(sizeof(unsigned long)*(1 + in->vertices_count));
+		assert(out->offsets_list != NULL);
+		out->edges_list = numa_alloc_interleaved(2 * sizeof(unsigned int) * in->edges_count);
+		assert(out->edges_list != NULL);
+	}
+	else
+	{
+		assert(out->vertices_count == in->vertices_count && out->offsets_list != NULL);
+		assert(out->edges_count == in->edges_count && out->edges_list != NULL);
+	}
+
+	#pragma omp parallel for 
+	for(unsigned int v=0; v <= out->vertices_count; v++)
+		out->offsets_list[v] = in->offsets_list[v];
+
+	#pragma omp parallel for 
+	for(unsigned long e=0; e < 2 * out->edges_count; e++)
+		out->edges_list[e] = in->edges_list[e];
+
+	return out;
+}
+
+
+
 #endif
