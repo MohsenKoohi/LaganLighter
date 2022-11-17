@@ -3,13 +3,10 @@
 This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .   
 
 ## Algorithms in This Repo
- - [SAPCo Sort](https://blogs.qub.ac.uk/GraphProcessing/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort` 
+ - [SAPCo Sort](https://blogs.qub.ac.uk/GraphProcessing/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort`
  - [Thrifty Label Propagation Connected Components](https://blogs.qub.ac.uk/graphprocessing/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/): `alg2_thrifty`
-
  - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](https://blogs.qub.ac.uk/GraphProcessing/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/): `alg3_mastiff`
-
- - [iHTL: in-Hub Temporal Locality For Sparse-Matrix Vectore (SpMV) Multiplication](https://blogs.qub.ac.uk/GraphProcessing/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
-
+ - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](https://blogs.qub.ac.uk/GraphProcessing/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
  - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/GraphProcessing/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
 
 
