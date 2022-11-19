@@ -25,10 +25,10 @@ The `libnuma`, `openmp`, and `papi` are required.
 
 ## Graph Types
 LaganLighter supports  the following graph formats:
- - CSR/CSC graph in text format, for testing, e.g. `data/test_csr.txt`. This format has 4 lines: |V|, |E|, |V| space-separated offsets, and |E| space-separated edges, respectively.  
- - CSR [WebGraph](https://law.di.unimi.it/datasets.php) format
- - CSR/CSC binary format
- - CSR/CSC sbin (separated binary) format 
+ - CSR/CSC graph in text format, for testing. This format has 4 lines: (i) number of vertices (|V|), (ii) number of edges (|E|), (iii) |V| space-separated numbers showing offsets of the vertices, and (iv) |E| space-separated numbers indicating edges.
+ - CSR [WebGraph](https://law.di.unimi.it/datasets.php) format : to be added
+ - CSR/CSC binary format : to be added
+ - CSR/CSC sbin (separated binary) format : to be added
 
 ## Bugs & Support
 As "we write bugs that in special cases work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
