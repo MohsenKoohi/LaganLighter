@@ -59,22 +59,22 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 	assert(in_events!= NULL && in_events_count != 0);
 
 	unsigned int event_set = PAPI_NULL;
-   int ret = PAPI_create_eventset(&event_set);
-   assert(ret == PAPI_OK);
+	int ret = PAPI_create_eventset(&event_set);
+	assert(ret == PAPI_OK);
 
-   unsigned long events_count = 0;
-   for(unsigned int i=0; i<in_events_count; i++)
-   {
-   	ret = PAPI_add_event(event_set, in_events[i]);
-   	if(ret != PAPI_OK)
-	  {
-	  	// char event_name[256]="";
-	  	// PAPI_event_code_to_name(in_events[i], event_name);
-	  	// printf("PAPI error for index %u, event %s (%x), %d: %s\n", i, event_name, in_events[i], ret, PAPI_strerror(ret));
-	  }
-   	else
-   		events_count++;
-   }
+	unsigned long events_count = 0;
+	for(unsigned int i=0; i<in_events_count; i++)
+	{
+		ret = PAPI_add_event(event_set, in_events[i]);
+		if(ret != PAPI_OK)
+		{
+			// char event_name[256]="";
+			// PAPI_event_code_to_name(in_events[i], event_name);
+			// printf("PAPI error for index %u, event %s (%x), %d: %s\n", i, event_name, in_events[i], ret, PAPI_strerror(ret));
+		}
+		else
+			events_count++;
+	}
 
 	if(events_count == 0)
 		return 0UL;
@@ -85,8 +85,8 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 		printf("PAPI can't start, %d: %s\n", ret, PAPI_strerror(ret));
 		exit(-1);
 	}
-  	
-  return (events_count << 32) + event_set;
+
+	return (events_count << 32) + event_set;
 }
 
 void papi_reset(unsigned long papi_arg)
