@@ -338,7 +338,7 @@ unsigned int* cc_thrifty(struct par_env* pe, struct ll_graph* g, unsigned int fl
 	// Allocating memory for the shared worklists
 		/*
 			We implement worklists as a shared SPF (Sequentially Partially Filled) array between threads. 
-			Since push iterations are sparse, we dedicate a chunk (with a size of cacheline, i.e., 16 uints) to each thread and after filling it we allocate another chunk. This way, we do not need to allocate per vertex worklist. 
+			Since push iterations are sparse, we dedicate a chunk (with a size of cacheline, i.e., 16 uints) to each thread and after filling it we allocate another chunk. This way, we do not need to allocate per thread worklist. 
 			
 			The another point is about tiling. The initial implementation of thrifty used the 
 			edge-tiling [Galois, DOI:10.1145/2517349.2522739] in the push iterations to allow
@@ -1063,7 +1063,6 @@ void cc_release(struct ll_graph* g, unsigned int* cc)
 	exec_info: if not NULL, will have
 		[0]: exec time
 		[1-7]: papi events
-		[8]: push max-degree
 */
 
 unsigned int* cc_jt(struct par_env* pe, struct ll_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
