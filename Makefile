@@ -30,6 +30,12 @@ else
 	COMPILE_TYPE := -O3 # -DNDEBUG
 endif
 
+ifdef graph
+	GRAPH := "$(graph)"
+else
+	GRAPH :=
+endif
+
 $(OBJ)/alg%.obj: alg%.c *.c Makefile
 	@echo Creating $@
 	$(GCC) $(INCLUDE_HEADER) $(FLAGS) $< -std=gnu11  $(COMPILE_TYPE) -c -o $@ 
@@ -45,7 +51,7 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "#total_threads: "$(_total_threads)
 	@echo -e "#available_cores: "$(_available_cores)
 	@echo -e "#available_threads: "$(_available_threads) 
-	LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o
+	LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(GRAPH)
 
 all:
 	

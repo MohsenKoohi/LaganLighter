@@ -19,7 +19,7 @@ The `libnuma`, `openmp`, and `papi` are required.
 ## Compiling and Executing Code
  - Set the path to `gcc` compiler folder in Line 1 of the `Makefile`.
  - Please modify Line 6, if the required libraries are not in the path.
- - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the argument to the `.o` executible file (e.g. `obj/alg1_sapco_sort.o path/to/graph`).
+ - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the value to variable `graph` to the `make` (e.g. `make alg1_sapco_sort graph="path/to/graph"`). 
  - To disable hyper-threading, please use `no_ht=1` with make.
  - To enable debugging (-g of gcc), use `debug=1`.
 
@@ -31,7 +31,7 @@ LaganLighter supports  the following graph formats:
  - CSR/CSC sbin (separated binary) format : to be added
 
 ## Bugs & Support
-As "we write bugs that in special cases work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
+As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
 
 ## Fundings
 The project LaganLighter leading to this Software has been supported by:
