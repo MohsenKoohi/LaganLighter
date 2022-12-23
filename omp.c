@@ -622,6 +622,31 @@ unsigned long get_free_mem()
 
 char* par_read_file(char* file_name, unsigned long start_offset, unsigned long end_offset, char* main_mem)
 {
+	unsigned long read_size = 4096UL * 1024 * 8 ; 
+	
+	if(end_offset - start_offset <= read_size)
+	{
+		int fd = open(file_name, O_RDONLY); 
+		assert(fd > 0);
+
+		unsigned long new_offset = lseek(fd, start_offset, SEEK_SET);
+		assert(new_offset == start_offset);
+
+		unsigned long read_bytes = 0;
+		unsigned long length = end_offset - start_offset;
+		while(read_bytes < length)
+		{
+			long ret = read(fd, main_mem + read_bytes, length - read_bytes);
+			assert(ret != -1);
+			read_bytes += ret;
+		}
+		
+		close(fd);
+		fd = -1;
+
+		return main_mem;
+	}
+
 	char* mem = NULL;
 	unsigned long start_bytes_before_4096 = 4096 - (start_offset % 4096);
 	unsigned long remainder = ((unsigned long)main_mem +  start_bytes_before_4096) % 4096;
@@ -657,8 +682,7 @@ char* par_read_file(char* file_name, unsigned long start_offset, unsigned long e
 		fd = -1;
 	}
 
-	// Reading the pages
-	unsigned long read_size = 4096UL * 1024 * 8 ; 
+	// Reading the blocks
 	unsigned long number_of_reads = (end_offset - start_offset - total_read_bytes) / read_size;
 	if(number_of_reads == 0 && end_offset - start_offset - total_read_bytes != 0)
 		number_of_reads++;

@@ -203,7 +203,7 @@ char* get_date_time(char* in)
 {
 	time_t t0 = time(NULL);
 	struct tm * t = localtime(&t0);
-	sprintf(in, "%04d/%02d/%02d %02d:%02d:%02d", 1900 + t->tm_year, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+	sprintf(in, "%04d/%02d/%02d %02d:%02d:%02d", 1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
 	return in;
 }
 

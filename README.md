@@ -1,3 +1,5 @@
+![LaganLighter](https://blogs.qub.ac.uk/graphprocessing/wp-content/uploads/sites/300/2021/03/header-18.jpg)
+
 # [LaganLighter:  Structure-Aware High-Performance Graph Algorithms](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter/)
 
 This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .   
