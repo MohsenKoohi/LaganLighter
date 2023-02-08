@@ -622,6 +622,12 @@ unsigned long get_free_mem()
 
 char* par_read_file(char* file_name, unsigned long start_offset, unsigned long end_offset, char* main_mem)
 {
+	// Checking
+	{
+		unsigned long file_size = get_file_size(file_name);
+		assert(end_offset <= file_size);
+	}
+
 	unsigned long read_size = 4096UL * 1024 * 8 ; 
 	
 	if(end_offset - start_offset <= read_size)
