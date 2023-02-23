@@ -1,19 +1,19 @@
 ![LaganLighter](https://blogs.qub.ac.uk/graphprocessing/wp-content/uploads/sites/300/2021/03/header-18.jpg)
 
-# [LaganLighter:  Structure-Aware High-Performance Graph Algorithms](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter/)
+# [LaganLighter:  Structure-Aware High-Performance Graph Algorithms](https://blogs.qub.ac.uk/DIPSA/LaganLighter/)
 
-This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/GraphProcessing/LaganLighter .   
+This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/DIPSA/LaganLighter .   
 
 ## Algorithms in This Repo
- - [SAPCo Sort](https://blogs.qub.ac.uk/GraphProcessing/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort`
- - [Thrifty Label Propagation Connected Components](https://blogs.qub.ac.uk/graphprocessing/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/): `alg2_thrifty`
- - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](https://blogs.qub.ac.uk/GraphProcessing/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/): `alg3_mastiff`
- - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](https://blogs.qub.ac.uk/GraphProcessing/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
- - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/GraphProcessing/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
+ - [SAPCo Sort](https://blogs.qub.ac.uk/DIPSA/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort`
+ - [Thrifty Label Propagation Connected Components](https://blogs.qub.ac.uk/DIPSA/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/): `alg2_thrifty`
+ - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](https://blogs.qub.ac.uk/DIPSA/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/): `alg3_mastiff`
+ - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](https://blogs.qub.ac.uk/DIPSA/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
+ - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/DIPSA/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
 
 
 ## How Does It Work?
-[LaganLighter source code documentation](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter-Source-Code)
+[LaganLighter source code documentation](https://blogs.qub.ac.uk/DIPSA/LaganLighter-Source-Code)
 
 ## Requirements
 The `libnuma`, `openmp`, and `papi` are required.
@@ -33,7 +33,7 @@ LaganLighter supports  the following graph formats:
  - CSR/CSC sbin (separated binary) format : to be added
 
 ## Bugs & Support
-As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/GraphProcessing/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
+As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/DIPSA/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
 
 ## Fundings
 The project LaganLighter leading to this Software has been supported by:
