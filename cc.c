@@ -148,7 +148,7 @@ unsigned int* cc_pull(struct par_env* pe, struct ll_graph* g, unsigned int flags
 /*
 	Thrifty Label Propagation Connected Components
 
-	https://blogs.qub.ac.uk/graphprocessing/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/
+	https://blogs.qub.ac.uk/DIPSA/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/
 
 	@INPROCEEDINGS{10.1109/Cluster48925.2021.00042,
 	  author={Koohi Esfahani, Mohsen and Kilpatrick, Peter and Vandierendonck, Hans},
