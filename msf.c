@@ -852,6 +852,7 @@ inline struct sdw_edge* edge_storage_get_one(struct edge_storage* es)
 
 /*
 	MASTIFF: Structure-Aware Minimum Spanning Tree/Forest (MST/MSF)
+	https://blogs.qub.ac.uk/DIPSA/mastiff-structure-aware-minimum-spanning-tree-forest/
 	
 	@INPROCEEDINGS{10.1145/3524059.3532365,
 		author = {Koohi Esfahani, Mohsen and Kilpatrick, Peter and Vandierendonck, Hans},
