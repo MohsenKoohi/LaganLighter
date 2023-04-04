@@ -33,7 +33,7 @@ int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int
 /*
 	SAPCO Sort: Structure-Aware Parallel Counting Sort
 
-	https://blogs.qub.ac.uk/GraphProcessing/SAPCo-Sort-Optimizing-Degree-Ordering-for-Power-Law-Graphs
+	https://blogs.qub.ac.uk/DIPSA/SAPCo-Sort-Optimizing-Degree-Ordering-for-Power-Law-Graphs
 
 	@INPROCEEDINGS{ 10.1109/ISPASS55109.2022.00015,
 		author={Koohi Esfahani, Mohsen and Kilpatrick, Peter and Vandierendonck, Hans},
