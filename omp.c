@@ -68,9 +68,12 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 		ret = PAPI_add_event(event_set, in_events[i]);
 		if(ret != PAPI_OK)
 		{
-			// char event_name[256]="";
-			// PAPI_event_code_to_name(in_events[i], event_name);
-			// printf("PAPI error for index %u, event %s (%x), %d: %s\n", i, event_name, in_events[i], ret, PAPI_strerror(ret));
+			if(omp_get_thread_num() == 0)
+			{
+				char event_name[256]="";
+				PAPI_event_code_to_name(in_events[i], event_name);
+				printf("PAPI error for index %u, event %s (%x), %d: %s\n", i, event_name, in_events[i], ret, PAPI_strerror(ret));
+			}
 		}
 		else
 			events_count++;
@@ -85,9 +88,10 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 		printf("PAPI can't start, %d: %s\n", ret, PAPI_strerror(ret));
 		exit(-1);
 	}
-
+	
 	return (events_count << 32) + event_set;
 }
+
 
 void papi_reset(unsigned long papi_arg)
 {
