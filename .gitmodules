@@ -1,0 +1,3 @@
+[submodule "ext/poplar"]
+	path = ext/poplar
+	url = https://github.com/DIPSA-QUB/Poplar.git
