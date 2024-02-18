@@ -3,10 +3,10 @@ GCC_DIR := ~/gcc9.2
 OBJ := obj
 GCC := $(GCC_DIR)/bin/gcc 
 GXX := $(GCC_DIR)/bin/g++ 
-LIB := $(GCC_DIR)/lib64:~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib:$(LD_LIBRARY_PATH)
-INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB)))
-INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB))) 
-FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lrt -lnuma 
+LIB := $(GCC_DIR)/lib64:~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib:poplar/lib64:$(LD_LIBRARY_PATH)
+INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) -L poplar/lib64
+INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB))) -I poplar/include
+FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lrt -lnuma -lpoplar
 
 _threads_per_core := $(shell lscpu | grep "Thread(s) per core" | head -n1 | cut -f2 -d":"|xargs)
 _total_threads := $(shell nproc --all) #getconf _NPROCESSORS_ONLN
@@ -46,14 +46,21 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "#available_cores: "$(_available_cores)
 	@echo -e "#available_threads: "$(_available_threads) 
 	@echo -e "graph: "$(graph)
+	@echo -e "graph_type: "$(graph_type)
 	@echo -e "other args: "$(args)
-	LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(args)
+	POPLAR_LIB_FOLDER=poplar/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(graph_type) $(args)
 
 all: poplar Makefile
 	
 poplar: FORCE
 	make -C poplar all
-
+	@if [ ! -f data/cnr-2000.graph ]; then \
+		echo -e "--------------------\n\033[1;34mDownloading cnr-2000\033[0;37m"; \
+		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.graph"; \
+		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.properties"; \
+		echo -e "--------------------\n";\
+	fi
+	
 clean:
 	rm -f $(OBJ)/*.obj $(OBJ)/*.o
 	touch *.c 
