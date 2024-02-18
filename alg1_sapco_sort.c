@@ -27,7 +27,6 @@ int main(int argc, char** args)
 		if(!strncmp(graph_type,"POPLAR_CSX_WG_",14))	
 			// Reading a WebGraph using Poplar library
 			graph = get_webgraph(dataset, graph_type);
-	
 		assert(graph != NULL);
 
 	// Initializing omp

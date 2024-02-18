@@ -24,20 +24,29 @@
 
 int main(int argc, char** args)
 {	
-	char* dataset = "data/test_csr.txt";
-	if(argc > 1)
-		dataset = args[1];
-
 	// Locale initialization
 		setlocale(LC_NUMERIC, "");
 		setbuf(stdout, NULL);
 		setbuf(stderr, NULL);
 		printf("\n");
 
-	// Reading the non-bin graph that do not require omp 
-		struct ll_graph* graph = get_txt_graph(dataset);
-		assert(graph != NULL);
+	// Reading the grpah
+		char* dataset = "data/test_csr.txt";
+		char* graph_type = "text";
+		struct ll_graph* graph = NULL;
+		if(argc >= 3)
+		{
+			dataset = args[1];
+			graph_type = args[2];
+		}
 
+		if(!strcmp(graph_type,"text"))
+			// Reading the textual graph that do not require omp 
+			graph = get_txt_graph(dataset);
+		if(!strncmp(graph_type,"POPLAR_CSX_WG_",14))	
+			// Reading a WebGraph using Poplar library
+			graph = get_webgraph(dataset, graph_type);	
+		assert(graph != NULL);
 
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
