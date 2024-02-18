@@ -11,6 +11,8 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](https://blogs.qub.ac.uk/DIPSA/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
  - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/DIPSA/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
 
+ ## Cloning 
+ `git clone https://github.com/DIPSA-QUB/LaganLighter.git --recursive`
 
 ## How Does It Work?
 [LaganLighter source code documentation](https://blogs.qub.ac.uk/DIPSA/LaganLighter-Source-Code)
@@ -27,11 +29,9 @@ The `libnuma`, `openmp`, and `papi` are required.
 
 ## Graph Types
 LaganLighter supports  the following graph formats:
- - CSR/CSC graph in text format, for testing. This format has 4 lines: (i) number of vertices (|V|), (ii) number of edges (|E|), (iii) |V| space-separated numbers showing offsets of the vertices, and (iv) |E| space-separated numbers indicating edges.
- - CSR [WebGraph](https://law.di.unimi.it/datasets.php) format : to be added
- - CSR/CSC binary format : to be added
- - CSR/CSC sbin (separated binary) format : to be added
-
+ - CSR/CSC graph in textual format, for testing. This format has 4 lines: (i) number of vertices (|V|), (ii) number of edges (|E|), (iii) |V| space-separated numbers showing offsets of the vertices, and (iv) |E| space-separated numbers indicating edges.
+ - CSR/CSC [WebGraph](https://law.di.unimi.it/datasets.php): Supported by the Poplar Graph Loading Library (https://blogs.qub.ac.uk/DIPSA/Poplar) 
+ 
 ## Bugs & Support
 As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/DIPSA/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
 

@@ -30,7 +30,7 @@ else
 	COMPILE_TYPE := -O3 # -DNDEBUG
 endif
 
-$(OBJ)/alg%.obj: alg%.c *.c Makefile
+$(OBJ)/alg%.obj: alg%.c *.c Makefile poplar
 	@echo Creating $@
 	$(GCC) $(INCLUDE_HEADER) $(FLAGS) $< -std=gnu11  $(COMPILE_TYPE) -c -o $@ 
 	@echo 
@@ -49,14 +49,19 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "other args: "$(args)
 	LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(args)
 
-all:
+all: poplar Makefile
 	
+poplar: FORCE
+	make -C poplar all
+
 clean:
 	rm -f $(OBJ)/*.obj $(OBJ)/*.o
 	touch *.c 
 	
 touch:
 	touch *.c 
+
+FORCE: ;
 
 .SUFFIXES:
 
