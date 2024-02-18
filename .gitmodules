@@ -1,4 +1,4 @@
-[submodule "ext/poplar"]
-	path = ext/poplar
+[submodule "poplar"]
+	path = poplar
 	url = https://github.com/DIPSA-QUB/Poplar.git
 	branch = main
