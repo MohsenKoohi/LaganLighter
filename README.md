@@ -19,6 +19,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 
 ## Requirements
 The `libnuma`, `openmp`, and `papi` are required.
+For using Poplar, a JDK version greater than 15 is required.
 
 ## Compiling and Executing Code
  - Set the path to `gcc` compiler folder in Line 1 of the `Makefile`.
