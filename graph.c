@@ -198,7 +198,7 @@ struct ll_graph* get_txt_graph(char* file_name)
 
 		g->offsets_list[g->vertices_count]=g->edges_count;
 
-		printf("Reading %'.1f (MB) completed in %'.1f (seconds)\n", total_read_bytes/1e6, (get_nano_time() - t1)/1e9); 
+		printf("Reading %'.1f (MB) completed in %'.3f (seconds)\n", total_read_bytes/1e6, (get_nano_time() - t1)/1e9); 
 	}
 
 	print_graph(g);
@@ -206,8 +206,12 @@ struct ll_graph* get_txt_graph(char* file_name)
 	return g;	
 }
 
-void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id)
+void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
 {
+	void** args = (void**) in_args;
+	unsigned long* completed_callbacks_count = (unsigned long*)args[0];
+	unsigned int* edges = (unsigned int*)args[1];
+
 	unsigned long* offsets = (unsigned long*)in_offsets;
 	unsigned long ec = offsets[eb->end_vertex] + eb->end_edge - offsets[eb->start_vertex] - eb->start_edge;
 	unsigned long dest_off = offsets[eb->start_vertex] + eb->start_edge;
@@ -218,7 +222,7 @@ void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in
 
 	poplar_csx_release_read_buffers(req, eb, buffer_id);
 
-	__atomic_add_fetch(&completed_callbacks_count, 1UL, __ATOMIC_RELAXED);
+	__atomic_add_fetch(completed_callbacks_count, 1UL, __ATOMIC_RELAXED);
 
 	return;
 }
@@ -257,6 +261,11 @@ struct ll_graph* get_webgraph(char* file_name, char* type)
 			assert (ret == 0);
 			printf("Vertices: %'lu\n",vertices_count);
 			printf("Edges: %'lu\n",edges_count);
+
+			// val = 1UL << (unsigned int)(log(edges_count)/log(2) - 3);
+			// op_args[0] = &val;
+			// ret = poplar_get_set_options(graph, POPLAR_REQUEST_SET_BUFFER_SIZE, op_args, 1);
+			// assert (ret == 0);
 		}
 
 	// Allocating memory
@@ -283,13 +292,15 @@ struct ll_graph* get_webgraph(char* file_name, char* type)
 
 	// Reading edges
 	{
+		unsigned long completed_callbacks_count = 0;
+		void* callback_args[] = {(void*)&completed_callbacks_count, (void*)g->edges_list};
 		poplar_edge_block eb;
 		eb.start_vertex = 0;
 		eb.start_edge=0;
 		eb.end_vertex = -1UL;
 		eb.end_edge= -1UL;
 
-		poplar_read_request* req= poplar_csx_get_subgraph(graph, &eb, NULL, NULL, __wg_404_callback, NULL, 0);
+		poplar_read_request* req= poplar_csx_get_subgraph(graph, &eb, NULL, NULL, __wg_404_callback, (void*)callback_args, NULL, 0);
 		assert(req != NULL);
 
 		struct timespec ts = {0, 200 * 1000 * 1000};
@@ -341,7 +352,7 @@ struct ll_graph* get_webgraph(char* file_name, char* type)
 		assert(ret == 0);
 		graph = NULL;
 		
-	printf("Reading completed in %'.1f (seconds)\n", (get_nano_time() - t1)/1e9); 
+	printf("Reading completed in %'.3f (seconds)\n", (get_nano_time() - t1)/1e9); 
 
 	print_graph(g);
 
