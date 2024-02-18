@@ -24,7 +24,7 @@ int main(int argc, char** args)
 		if(!strcmp(graph_type,"text"))
 			// Reading the textual graph that do not require omp 
 			graph = get_txt_graph(dataset);
-		if(!strncmp(graph_type,"POPLAR_WG_",10))	
+		if(!strncmp(graph_type,"POPLAR_CSX_WG_",14))	
 			// Reading a WebGraph using Poplar library
 			graph = get_webgraph(dataset, graph_type);
 	
