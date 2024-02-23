@@ -55,24 +55,24 @@ void print_ll_400_graph(struct ll_400_graph* ret)
 	printf("\n|V|: %'20lu\n|E|: %'20lu\n", ret->vertices_count, ret->edges_count);
 	printf("First offsets: ");
 	for(unsigned int v=0; v<min(ret->vertices_count + 1, 20); v++)
-		printf("%'lu, ", ret->offsets_list[v]);
+		printf("%lu, ", ret->offsets_list[v]);
 	if(ret->vertices_count > 20)
 	{
 		printf("...\nLast offsets: ... ");
 		for(unsigned int v = ret->vertices_count - 20; v <= ret->vertices_count; v++)
-			printf(", %'lu", ret->offsets_list[v]);
+			printf(", %lu", ret->offsets_list[v]);
 	}
 
 	if(ret->edges_list)
 	{
 		printf("\nFirst edges: ");
 		for(unsigned long e=0; e<min(ret->edges_count, 20); e++)
-			printf("%'u, ", ret->edges_list[e]);
+			printf("%u, ", ret->edges_list[e]);
 		if(ret->edges_count > 20)
 		{
 			printf(" ...\nLast edges: ... ");
 			for(unsigned long e = ret->edges_count - 20; e < ret->edges_count; e++)
-				printf(", %'u", ret->edges_list[e]);
+				printf(", %u", ret->edges_list[e]);
 		}
 	}
 
@@ -374,6 +374,158 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 	return g;	
 }
 
+
+void __ll_404_webgraph_callback(poplar_read_request* req, poplar_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
+{
+	void** args = (void**) in_args;
+	unsigned long* completed_callbacks_count = (unsigned long*)args[0];
+	// Each edge has 4-Bytes for vertex ID and 4-Bytes for edge weight, we copy the 8-Bytes together
+	unsigned long* graph_edges = (unsigned long*)args[1];
+
+	unsigned long* offsets = (unsigned long*)in_offsets;
+	unsigned long ec = offsets[eb->end_vertex] + eb->end_edge - offsets[eb->start_vertex] - eb->start_edge;
+	unsigned long dest_off = offsets[eb->start_vertex] + eb->start_edge;
+	unsigned long* ul_in_edges = (unsigned long*)in_edges;
+
+	// No need to parallelize this loop as multiple instances of the callbacks are concurrently called by the Poplar 
+	for(unsigned long e = 0; e < ec; e++, dest_off++)
+		graph_edges[dest_off] = ul_in_edges[e];
+
+	poplar_csx_release_read_buffers(req, eb, buffer_id);
+
+	__atomic_add_fetch(completed_callbacks_count, 1UL, __ATOMIC_RELAXED);
+
+	return;
+}
+
+struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
+{	
+	// Opening graph
+		unsigned long t1=get_nano_time();
+			
+		int ret = poplar_init();
+		assert(ret == 0);
+
+		poplar_graph_type pgt;
+		if(!strcmp(type, "POPLAR_CSX_WG_404_AP"))
+			pgt = POPLAR_CSX_WG_404_AP;
+		else
+		{
+			assert(0 && "get_ll_404_webgraph does not work for this type of graph.");
+			return NULL;
+		}
+		poplar_graph* graph = poplar_open_graph(file_name, pgt, NULL, 0);
+		assert(graph != NULL);
+
+		unsigned long vertices_count = 0;
+		unsigned long edges_count = 0;	
+		{
+			void* op_args []= {&vertices_count, &edges_count};
+
+			ret = poplar_get_set_options(graph, POPLAR_REQUEST_GET_VERTICES_COUNT, op_args, 1);
+			assert (ret == 0);
+			ret = poplar_get_set_options(graph, POPLAR_REQUEST_GET_EDGES_COUNT, op_args + 1, 1);
+			assert (ret == 0);
+			printf("Vertices: %'lu\n",vertices_count);
+			printf("Edges: %'lu\n",edges_count);
+
+			// val = 1UL << (unsigned int)(log(edges_count)/log(2) - 3);
+			// op_args[0] = &val;
+			// ret = poplar_get_set_options(graph, POPLAR_REQUEST_SET_BUFFER_SIZE, op_args, 1);
+			// assert (ret == 0);
+		}
+
+	// Allocating memory
+		struct ll_404_graph* g =calloc(sizeof(struct ll_404_graph),1);
+		assert(g != NULL);
+		g->vertices_count = vertices_count;
+		g->edges_count = edges_count;
+		g->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * (1 + g->vertices_count));
+		assert(g->offsets_list != NULL);
+		g->edges_list = numa_alloc_interleaved(2UL * sizeof(unsigned int) * g->edges_count);
+		assert(g->edges_list != NULL);
+		
+	// Writing offsets
+	{
+		unsigned long* offsets = (unsigned long*)poplar_csx_get_offsets(graph, NULL, 0, -1UL, NULL, 0);
+		assert(offsets != NULL);
+
+		for(unsigned long v = 0; v <= vertices_count; v++)
+			g->offsets_list[v] = offsets[v];
+
+		poplar_csx_release_offsets_weights_arrays(graph, offsets);
+		offsets = NULL;
+	}
+
+	// Reading edges
+	{
+		unsigned long completed_callbacks_count = 0;
+		void* callback_args[] = {(void*)&completed_callbacks_count, (void*)g->edges_list};
+		poplar_edge_block eb;
+		eb.start_vertex = 0;
+		eb.start_edge=0;
+		eb.end_vertex = -1UL;
+		eb.end_edge= -1UL;
+
+		poplar_read_request* req= poplar_csx_get_subgraph(graph, &eb, NULL, NULL, __ll_404_webgraph_callback, (void*)callback_args, NULL, 0);
+		assert(req != NULL);
+
+		struct timespec ts = {0, 200 * 1000 * 1000};
+		long status = 0;
+		unsigned long read_edges = 0;
+		unsigned long callbacks_count = 0;
+		void* op0_args []= {req, &status};
+		void* op1_args []= {req, &read_edges};
+		void* op2_args []= {req, &callbacks_count};
+		unsigned long next_edge_limit_print = 0;
+		do
+		{
+			nanosleep(&ts, NULL);
+			
+			ret = poplar_get_set_options(graph, POPLAR_REQUEST_READ_STATUS, op0_args, 2);
+			assert (ret == 0);
+			ret = poplar_get_set_options(graph, POPLAR_REQUEST_READ_EDGES, op1_args, 2);
+			assert (ret == 0);
+			if(callbacks_count == 0)
+			{
+				ret = poplar_get_set_options(graph, POPLAR_REQUEST_READ_TOTAL_CALLBACKS, op2_args, 2);
+				assert (ret == 0);
+			}
+
+			if(read_edges >= next_edge_limit_print)
+			{
+				printf("  Reading ..., status: %'ld, read_edges: %'lu, completed callbacks: %'u/%'u .\n", status, read_edges, completed_callbacks_count, callbacks_count);
+
+				next_edge_limit_print += 0.05 * edges_count;
+			}
+		}
+		while(status == 0);
+
+		// printf("  Reading graph finished, status: %'ld, read_edges: %'lu, completed callbacks: %'u/%'u .\n", status, read_edges, completed_callbacks_count, callbacks_count);
+
+		// Waiting for all buffers to be processed
+		while(completed_callbacks_count < callbacks_count)
+		{
+			nanosleep(&ts, NULL);
+			// printf("  Waiting for callbacks ..., completed callbacks: %'u/%'u .\n", completed_callbacks_count, callbacks_count);
+		}
+		// Releasing the req
+		poplar_csx_release_read_request(req);
+		req = NULL;
+	}
+
+	// Releasing the poplar graph
+		ret = poplar_release_graph(graph, NULL, 0);
+		assert(ret == 0);
+		graph = NULL;
+		
+	printf("Reading completed in %'.3f (seconds)\n", (get_nano_time() - t1)/1e9); 
+
+	print_ll_400_graph((struct ll_400_graph*)g);
+
+	return g;	
+}
+
 void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 {
 	assert(g!= NULL && g->offsets_list != NULL);
@@ -422,7 +574,7 @@ void release_numa_interleaved_ll_404_graph(struct ll_404_graph* g)
 
 	if(g->edges_list)
 	{
-		numa_free(g->edges_list, 2 * sizeof(unsigned int) * g->edges_count);
+		numa_free(g->edges_list, 2UL * sizeof(unsigned int) * g->edges_count);
 		g->edges_list = NULL;
 	}
 

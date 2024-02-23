@@ -42,6 +42,9 @@ int main(int argc, char** args)
 			graph_type = args[2];
 		}
 
+		// get_ll_404_webgraph(dataset, graph_type);
+		// exit(-1);
+
 		if(!strcmp(graph_type,"text"))
 			// Reading the textual graph that do not require omp 
 			csr_graph = get_ll_400_txt_graph(dataset);
@@ -78,7 +81,7 @@ int main(int argc, char** args)
 		assert(1 == msf_validate(pe, sym_graph ,res_mastiff, 0));
 		
 		struct msf* res_prim = NULL;
-		// if(0)
+		if(wgraph->vertices_count < 1024)
 		{
 			// the implementation of prim changes the topology
 			struct ll_404_graph* cwg = copy_ll_404_graph(pe, wgraph, NULL); 
