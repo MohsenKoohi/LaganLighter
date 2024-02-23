@@ -60,6 +60,9 @@ poplar: FORCE
 		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.properties"; \
 		echo -e "--------------------\n";\
 	fi
+
+tests:
+	make $(subst .c,,$(shell ls alg*.c))
 	
 clean:
 	rm -f $(OBJ)/*.obj $(OBJ)/*.o
