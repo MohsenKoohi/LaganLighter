@@ -831,7 +831,7 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 		0 : validate
 
 */
-struct ll_404_graph* add_4B_weight_to_ll_404_graph(struct par_env* pe, struct ll_400_graph* g, unsigned int max_weight, unsigned int flags)
+struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll_400_graph* g, unsigned int max_weight, unsigned int flags)
 {
 	assert(pe != NULL && g != NULL && max_weight != 0);
 	printf("\n\033[3;36madd_4B_weight_to_graph\033[0;37m, wieght_val: \033[3;36m%'u\033[0;37m .\n",  max_weight);
@@ -854,27 +854,79 @@ struct ll_404_graph* add_4B_weight_to_ll_404_graph(struct par_env* pe, struct ll
 	
 	// Assigning weights
 		// Assign weights for neighbours of each vertex with IDs smaller than the ID of that vertex 
+			// Partitioning
+			unsigned int thread_partitions = 64;
+			unsigned int partitions_count = pe->threads_count * thread_partitions;
+			printf("\033[3;35mCSR\033[0;37m partitioning, partitions: %'u \n", partitions_count);
+			unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
+			assert(partitions != NULL);
+			parallel_edge_partitioning(g, partitions, partitions_count);
+			struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
+
 			unsigned long mt = - get_nano_time();
-			#pragma omp parallel  
+			#pragma omp parallel
 			{
 				unsigned int tid = omp_get_thread_num();
 				ttimes[tid] = - get_nano_time();
-				#pragma omp for nowait
-				for(unsigned int v=0; v < graph->vertices_count; v++)
+				unsigned int partition = -1U;
+				while(1)
 				{
-					unsigned long e = g->offsets_list[v];
-					for(; e < g->offsets_list[v+1]; e++)
-					{
-						if(g->edges_list[e] > v)
-							break;
+					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+					if(partition == -1U)
+						break; 
 
-						graph->edges_list[2 * e] = g->edges_list[e];
-						graph->edges_list[2 * e + 1] = 1 + (rand() % max_weight);
+					// Preparing the seed for randomization
+						// We create random weights that remain the same in different executions
+						// So for each partition we create a repeatable seed
+						
+						// Using splitmix64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds 
+						unsigned long s[4];
+						{
+							unsigned long x = partition;
+							for(int si = 0; si < 4; si++)
+							{
+								unsigned long z = (x += 0x9e3779b97f4a7c15);
+								z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
+								z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
+								s[si] = z ^ (z >> 31);
+							}
+						}
+
+					// Iterating over vertices in this partition
+					for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)		
+					{
+						unsigned long e = g->offsets_list[v];
+						for(; e < g->offsets_list[v+1]; e++)
+						{
+							if(g->edges_list[e] > v)
+								break;
+
+							unsigned int rand_val;
+							// Setting the rand_val using xoshiro256 (https://prng.di.unimi.it/xoshiro256plusplus.c)
+							{
+								rand_val = s[0] + (((s[0] + s[3]) << 23) | ((s[0] + s[3]) >> (64 - 23)));
+
+								unsigned long t = s[1] << 17;
+								s[2] ^= s[0];
+								s[3] ^= s[1];
+								s[1] ^= s[2];
+								s[0] ^= s[3];
+								s[2] ^= t;
+								s[3] = (s[3] << 45) | (s[3] >> (64 - 45));
+							}
+
+							graph->edges_list[2 * e] = g->edges_list[e];
+							graph->edges_list[2 * e + 1] = 1 + (rand_val % max_weight);
+						}
+						graph->offsets_list[v] = e;
 					}
-					graph->offsets_list[v] = e;
 				}
 				ttimes[tid] += get_nano_time();
 			}
+			dynamic_partitioning_release(dp);
+			dp = NULL;
+			free(partitions);
+			partitions = NULL;
 			mt += get_nano_time();
 			PTIP("Step 1: Assigning weights");
 		

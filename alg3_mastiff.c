@@ -68,7 +68,7 @@ int main(int argc, char** args)
 		release_numa_interleaved_ll_400_graph(csr_graph);
 		csr_graph = NULL;
 
-		struct ll_404_graph* wgraph = add_4B_weight_to_ll_404_graph(pe, sym_graph, 1024*100, 0); // 1U: validate
+		struct ll_404_graph* wgraph = add_4B_weight_to_ll_400_graph(pe, sym_graph, 1024*100, 0); // 1U: validate
 		printf("Weighted: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,wgraph->vertices_count,wgraph->edges_count);
 
 	// Running MSF
