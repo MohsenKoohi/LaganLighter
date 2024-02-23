@@ -20,7 +20,8 @@
 #include "omp.c"
 #include "poplar.h"
 
-struct ll_graph
+// 4 Bytes ID per vertex, without weights on edges or vertices
+struct ll_400_graph
 {
 	unsigned long vertices_count;
 	unsigned long edges_count;
@@ -28,11 +29,11 @@ struct ll_graph
 	unsigned int* edges_list;
 };
 
-// 4 bytes weight per edge
-// each edge has two unsigned int elements in the edges_list, 
-// the first one is the destination/source, and 
-// the second one is the weight
-struct w4_graph
+// 4 Bytes ID per vertex, 4 Bytes weight per edge, with no weight on vertices
+// Each edge has two unsigned int elements in the edges_list, 
+// The first one is the destination/source, and 
+// The second one is the weight
+struct ll_404_graph
 {
 	unsigned long vertices_count;
 	unsigned long edges_count;
@@ -40,7 +41,16 @@ struct w4_graph
 	unsigned int* edges_list;
 };
 
-void print_graph(struct ll_graph* ret)
+// 8 Bytes IDs per vertex, without weights on edges or vertices
+struct ll_800_graph
+{
+	unsigned long vertices_count;
+	unsigned long edges_count;
+	unsigned long* offsets_list;
+	unsigned long* edges_list;
+};
+
+void print_ll_400_graph(struct ll_400_graph* ret)
 {
 	printf("\n|V|: %'20lu\n|E|: %'20lu\n", ret->vertices_count, ret->edges_count);
 	printf("First offsets: ");
@@ -71,7 +81,7 @@ void print_graph(struct ll_graph* ret)
 	return;
 }
 
-struct ll_graph* get_txt_graph(char* file_name)
+struct ll_400_graph* get_txt_graph(char* file_name)
 {
 	// Check if file exists
 		if(access(file_name, F_OK) != 0)
@@ -99,7 +109,7 @@ struct ll_graph* get_txt_graph(char* file_name)
 		}
 
 	// Allocate memory
-		struct ll_graph* g =calloc(sizeof(struct ll_graph),1);
+		struct ll_400_graph* g =calloc(sizeof(struct ll_400_graph),1);
 		assert(g != NULL);
 		g->vertices_count = vertices_count;
 		g->edges_count = edges_count;
@@ -201,7 +211,7 @@ struct ll_graph* get_txt_graph(char* file_name)
 		printf("Reading %'.1f (MB) completed in %'.3f (seconds)\n", total_read_bytes/1e6, (get_nano_time() - t1)/1e9); 
 	}
 
-	print_graph(g);
+	print_ll_400_graph(g);
 
 	return g;	
 }
@@ -227,7 +237,7 @@ void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in
 	return;
 }
 
-struct ll_graph* get_webgraph(char* file_name, char* type)
+struct ll_400_graph* get_webgraph(char* file_name, char* type)
 {	
 	// Opening graph
 		unsigned long t1=get_nano_time();
@@ -269,7 +279,7 @@ struct ll_graph* get_webgraph(char* file_name, char* type)
 		}
 
 	// Allocating memory
-		struct ll_graph* g =calloc(sizeof(struct ll_graph),1);
+		struct ll_400_graph* g =calloc(sizeof(struct ll_400_graph),1);
 		assert(g != NULL);
 		g->vertices_count = vertices_count;
 		g->edges_count = edges_count;
@@ -354,12 +364,12 @@ struct ll_graph* get_webgraph(char* file_name, char* type)
 		
 	printf("Reading completed in %'.3f (seconds)\n", (get_nano_time() - t1)/1e9); 
 
-	print_graph(g);
+	print_ll_400_graph(g);
 
 	return g;	
 }
 
-void release_numa_interleaved_graph(struct ll_graph* g)
+void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 {
 	assert(g!= NULL && g->offsets_list != NULL);
 
@@ -369,6 +379,45 @@ void release_numa_interleaved_graph(struct ll_graph* g)
 	if(g->edges_list)
 	{
 		numa_free(g->edges_list, sizeof(unsigned int) * g->edges_count);
+		g->edges_list = NULL;
+	}
+
+	free(g);
+	g = NULL;
+
+	return;
+}
+
+
+void release_numa_interleaved_ll_800_graph(struct ll_800_graph* g)
+{
+	assert(g!= NULL && g->offsets_list != NULL);
+
+	numa_free(g->offsets_list, sizeof(unsigned long)*(1 + g->vertices_count));
+	g->offsets_list = NULL;
+
+	if(g->edges_list)
+	{
+		numa_free(g->edges_list, sizeof(unsigned long) * g->edges_count);
+		g->edges_list = NULL;
+	}
+
+	free(g);
+	g = NULL;
+
+	return;
+}
+
+void release_numa_interleaved_ll_404_graph(struct ll_404_graph* g)
+{
+	assert(g!= NULL && g->offsets_list != NULL);
+
+	numa_free(g->offsets_list, sizeof(unsigned long)*(1 + g->vertices_count));
+	g->offsets_list = NULL;
+
+	if(g->edges_list)
+	{
+		numa_free(g->edges_list, 2 * sizeof(unsigned int) * g->edges_count);
 		g->edges_list = NULL;
 	}
 

@@ -33,7 +33,7 @@ int main(int argc, char** args)
 	// Reading the grpah
 		char* dataset = "data/test_csr.txt";
 		char* graph_type = "text";
-		struct ll_graph* graph = NULL;
+		struct ll_400_graph* graph = NULL;
 		if(argc >= 3)
 		{
 			dataset = args[1];
@@ -55,13 +55,13 @@ int main(int argc, char** args)
 		assert(exec_info != NULL);
 
 	// Retrieving the graph
-		struct ll_graph* csr_graph = graph;
+		struct ll_400_graph* csr_graph = graph;
 		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,csr_graph->vertices_count,csr_graph->edges_count);
 		
-		struct ll_graph* sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
+		struct ll_400_graph* sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
 		printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,sym_graph->vertices_count,sym_graph->edges_count);
 
-		release_numa_interleaved_graph(csr_graph);
+		release_numa_interleaved_ll_400_graph(csr_graph);
 		csr_graph = NULL;
 		graph = sym_graph;
 
@@ -70,7 +70,7 @@ int main(int argc, char** args)
 		unsigned int ccs_p = 0;
 		unsigned int* cc_p = cc_pull(pe, graph, flags, exec_info, &ccs_p);
 		unsigned int ccs_t = 0;
-		unsigned int* cc_t = cc_thrifty(pe, graph, flags, &exec_info[10], &ccs_t);
+		unsigned int* cc_t = cc_thrifty_400(pe, graph, flags, &exec_info[10], &ccs_t);
 		
 	// Validating
 		// (1) If two vertices are on the same componenet (i.e., they have the same cc_p), they should have the same cc_t
@@ -89,7 +89,7 @@ int main(int argc, char** args)
 		cc_p = NULL;
 
 	
-		release_numa_interleaved_graph(graph);
+		release_numa_interleaved_ll_400_graph(graph);
 		sym_graph = NULL;
 		graph = NULL;
 

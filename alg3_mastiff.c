@@ -35,7 +35,7 @@ int main(int argc, char** args)
 	// Reading the grpah
 		char* dataset = "data/test_csr.txt";
 		char* graph_type = "text";
-		struct ll_graph* graph = NULL;
+		struct ll_400_graph* csr_graph = NULL;
 		if(argc >= 3)
 		{
 			dataset = args[1];
@@ -44,11 +44,11 @@ int main(int argc, char** args)
 
 		if(!strcmp(graph_type,"text"))
 			// Reading the textual graph that do not require omp 
-			graph = get_txt_graph(dataset);
+			csr_graph = get_txt_graph(dataset);
 		if(!strncmp(graph_type,"POPLAR_CSX_WG_",14))	
 			// Reading a WebGraph using Poplar library
-			graph = get_webgraph(dataset, graph_type);
-		assert(graph != NULL);
+			csr_graph = get_webgraph(dataset, graph_type);
+		assert(csr_graph != NULL);
 
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
@@ -59,13 +59,13 @@ int main(int argc, char** args)
 	// Symmetrizing and adding weights to the graph
 		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,csr_graph->vertices_count,csr_graph->edges_count);
 		
-		struct ll_graph* sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
+		struct ll_400_graph* sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
 		printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,sym_graph->vertices_count,sym_graph->edges_count);
 
-		release_numa_interleaved_graph(csr_graph);
+		release_numa_interleaved_ll_400_graph(csr_graph);
 		csr_graph = NULL;
 
-		struct w4_graph* wgraph = add_4B_weight_to_graph(pe, sym_graph, 1024*100, 0); // 1U: validate
+		struct ll_404_graph* wgraph = add_4B_weight_to_ll_404_graph(pe, sym_graph, 1024*100, 0); // 1U: validate
 		printf("Weighted: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,wgraph->vertices_count,wgraph->edges_count);
 
 	// Running MSF
@@ -81,7 +81,7 @@ int main(int argc, char** args)
 		// if(0)
 		{
 			// the implementation of prim changes the topology
-			struct w4_graph* cwg = copy_w4_graph(pe, wgraph, NULL); 
+			struct ll_404_graph* cwg = copy_ll_404_graph(pe, wgraph, NULL); 
 			
 			res_prim = msf_prim_serial(pe, cwg, 0);
 
@@ -90,7 +90,7 @@ int main(int argc, char** args)
 			assert(res_mastiff->total_weight == res_prim->total_weight);
 			printf("Total weight is \033[1;33m correct\033[0;37m.\n");
 			
-			release_w4_graph(cwg);
+			release_numa_interleaved_ll_404_graph(cwg);
 			cwg = NULL;
 		}
 			
@@ -106,10 +106,10 @@ int main(int argc, char** args)
 				res_mastiff = NULL;
 			}
 
-			release_numa_interleaved_graph(sym_graph);
+			release_numa_interleaved_ll_400_graph(sym_graph);
 			sym_graph = NULL;
 
-			release_w4_graph(wgraph);
+			release_numa_interleaved_ll_404_graph(wgraph);
 			wgraph = NULL;
 
 

@@ -14,7 +14,7 @@ int main(int argc, char** args)
 	// Reading the grpah
 		char* dataset = "data/test_csr.txt";
 		char* graph_type = "text";
-		struct ll_graph* graph = NULL;
+		struct ll_400_graph* graph = NULL;
 		if(argc >= 3)
 		{
 			dataset = args[1];
@@ -36,10 +36,10 @@ int main(int argc, char** args)
 		assert(exec_info != NULL);
 
 	// Retrieving the graph
-		struct ll_graph* csr_graph = graph;
+		struct ll_400_graph* csr_graph = graph;
 		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,csr_graph->vertices_count,csr_graph->edges_count);
 
-		struct ll_graph* csc_graph = csr2csc(pe, csr_graph, 8U); // bit 3: do not write edges
+		struct ll_400_graph* csc_graph = csr2csc(pe, csr_graph, 8U); // bit 3: do not write edges
 		printf("CSC: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset,csc_graph->vertices_count,csc_graph->edges_count);
 
 	// Creating the reordering array
@@ -65,10 +65,10 @@ int main(int argc, char** args)
 		numa_free(RA_n2o, sizeof(unsigned int) * csc_graph->vertices_count);
 		RA_n2o = NULL;
 
-		release_numa_interleaved_graph(csc_graph);
+		release_numa_interleaved_ll_400_graph(csc_graph);
 		csc_graph = NULL;
 
-		release_numa_interleaved_graph(csr_graph);
+		release_numa_interleaved_ll_400_graph(csr_graph);
 		csr_graph = NULL;
 		graph = NULL;
 

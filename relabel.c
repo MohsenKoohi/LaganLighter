@@ -66,7 +66,7 @@ int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int
 		[8-11]: timing 
 */
 
-unsigned int* sapco_sort_degree_ordering(struct par_env* pe, struct ll_graph* g, unsigned long* exec_info, unsigned int flags)
+unsigned int* sapco_sort_degree_ordering(struct par_env* pe, struct ll_400_graph* g, unsigned long* exec_info, unsigned int flags)
 {
 	// (1.1) Initial checks
 		unsigned long t0 = - get_nano_time();
@@ -330,7 +330,7 @@ unsigned int* sapco_sort_degree_ordering(struct par_env* pe, struct ll_graph* g,
 		[8-11]: timings of steps
 */
 
-unsigned int* counting_sort_degree_ordering(struct par_env* pe, struct ll_graph* g, unsigned long* exec_info, unsigned int flags)
+unsigned int* counting_sort_degree_ordering(struct par_env* pe, struct ll_400_graph* g, unsigned long* exec_info, unsigned int flags)
 {
 	// (1.1) Initial checks
 		unsigned long t0 = - get_nano_time();

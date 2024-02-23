@@ -198,7 +198,7 @@ void msf_free(struct msf* in)
 	return;
 }
 
-struct ll_graph* msf2graph(struct par_env* pe, struct msf* msf)
+struct ll_400_graph* msf2graph(struct par_env* pe, struct msf* msf)
 {
 	// Initial checks
 		assert(pe != NULL && msf != NULL && msf->total_edges < msf->vertices_count);
@@ -206,7 +206,7 @@ struct ll_graph* msf2graph(struct par_env* pe, struct msf* msf)
 		unsigned int vertices_count = msf->vertices_count;
 
 	// Allocate memory
-		struct ll_graph* ret =calloc(sizeof(struct ll_graph),1);
+		struct ll_400_graph* ret =calloc(sizeof(struct ll_400_graph),1);
 		assert(ret != NULL);
 		ret->vertices_count = vertices_count;
 		ret->edges_count = 2 * msf->total_edges;
@@ -371,7 +371,7 @@ struct ll_graph* msf2graph(struct par_env* pe, struct msf* msf)
 			}
 
 	// Validate
-		print_graph(ret);
+		print_ll_400_graph(ret);
 		for(unsigned long p = 0; p < msf->pages_count; p++)
 		{
 			#pragma omp parallel for
@@ -401,7 +401,7 @@ struct ll_graph* msf2graph(struct par_env* pe, struct msf* msf)
 	flags:
 		bit 0: print details
 */
-int msf_validate(struct par_env* pe, struct ll_graph* main_graph, struct msf* forest, unsigned int flags)
+int msf_validate(struct par_env* pe, struct ll_400_graph* main_graph, struct msf* forest, unsigned int flags)
 {
 	// Initial checks
 		unsigned long t0 = - get_nano_time();
@@ -422,16 +422,16 @@ int msf_validate(struct par_env* pe, struct ll_graph* main_graph, struct msf* fo
 		}
 		printf("\033[3;35m(1) Edges are valid\033[0;37m.\n");
 
-	// Create a ll_graph from forest
-		struct ll_graph* fg = msf2graph(pe, forest);
+	// Create a ll_400_graph from forest
+		struct ll_400_graph* fg = msf2graph(pe, forest);
 
 	// Check if the main_graph and fg, i.e. msf, have the same connectivity	for each vertex
 		// proof of connectivity correctness is similar to correctness of CCs in XP124
 		unsigned int main_ccs_count = 0;
-		unsigned int* main_cc = cc_thrifty(pe, main_graph, 0, NULL, &main_ccs_count);
+		unsigned int* main_cc = cc_thrifty_400(pe, main_graph, 0, NULL, &main_ccs_count);
 		
 		unsigned int forest_ccs_count = 0;
-		unsigned int* forest_cc = cc_thrifty(pe, fg, 0, NULL, &forest_ccs_count);
+		unsigned int* forest_cc = cc_thrifty_400(pe, fg, 0, NULL, &forest_ccs_count);
 
 		#pragma omp parallel for 
 		for(unsigned v = 0; v < main_graph->vertices_count; v++)
@@ -607,7 +607,7 @@ int msf_validate(struct par_env* pe, struct ll_graph* main_graph, struct msf* fo
 		cc_release(fg, forest_cc);
 		forest_cc = NULL;
 
-		release_numa_interleaved_graph(fg);
+		release_numa_interleaved_ll_400_graph(fg);
 		fg = NULL;
 
 	// Finalizing
@@ -623,7 +623,7 @@ int msf_validate(struct par_env* pe, struct ll_graph* main_graph, struct msf* fo
 		flags: 
 			bit 0: print each edge
 */
-struct msf* msf_prim_serial(struct par_env* pe, struct w4_graph* g, unsigned int flags)
+struct msf* msf_prim_serial(struct par_env* pe, struct ll_404_graph* g, unsigned int flags)
 {
 	// Initial checks
 		assert(g != NULL);
@@ -882,7 +882,7 @@ inline struct sdw_edge* edge_storage_get_one(struct edge_storage* es)
 				[8]: #iterations
 */
 
-struct msf* msf_mastiff(struct par_env* pe, struct w4_graph* g, unsigned long* exec_info, unsigned int flags)
+struct msf* msf_mastiff(struct par_env* pe, struct ll_404_graph* g, unsigned long* exec_info, unsigned int flags)
 {
 	// Initial checks
 		assert(g != NULL);
@@ -902,7 +902,7 @@ struct msf* msf_mastiff(struct par_env* pe, struct w4_graph* g, unsigned long* e
 		unsigned int* edge_partitions = calloc(sizeof(unsigned int), partitions_count+1);
 		assert(edge_partitions != NULL);
 		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
-		parallel_edge_partitioning((struct ll_graph*)g, edge_partitions, partitions_count); 
+		parallel_edge_partitioning((struct ll_400_graph*)g, edge_partitions, partitions_count); 
 
 	// Memory allocation 
 		struct msf* forest = msf_alloc(g->vertices_count, pe->threads_count);
@@ -947,7 +947,7 @@ struct msf* msf_mastiff(struct par_env* pe, struct w4_graph* g, unsigned long* e
 		{
 
 			if(g->edges_count > 5 * g->vertices_count)
-				graph_component = cc_thrifty_w4(pe, g, 2U, NULL, NULL);
+				graph_component = cc_thrifty_404(pe, g, 2U, NULL, NULL);
 			else
 			{
 				// JT CC
@@ -1458,7 +1458,7 @@ struct msf* msf_mastiff(struct par_env* pe, struct w4_graph* g, unsigned long* e
 		numa_free(cs, sizeof(unsigned int) * g->vertices_count);
 		cs = NULL;
 		
-		cc_release((struct ll_graph*)g, graph_component);
+		cc_release((struct ll_400_graph*)g, graph_component);
 		graph_component = NULL;
 		numa_free(parent, sizeof(unsigned int) * g->vertices_count);
 		parent = NULL;

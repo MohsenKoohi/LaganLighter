@@ -46,7 +46,7 @@
 	bit 1 : sort neighbour-list of the output  
 	bit 2 : remove self-edges
 */
-struct ll_graph* csr2sym(struct par_env* pe, struct ll_graph* csr, unsigned int flags)
+struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsigned int flags)
 {
 	// Initial checks
 		unsigned long tt = - get_nano_time();
@@ -69,7 +69,7 @@ struct ll_graph* csr2sym(struct par_env* pe, struct ll_graph* csr, unsigned int 
 		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
 
 	// Allocating memory
-		struct ll_graph* out_graph =calloc(sizeof(struct ll_graph),1);
+		struct ll_400_graph* out_graph =calloc(sizeof(struct ll_400_graph),1);
 		assert(out_graph != NULL);
 		out_graph->vertices_count = csr->vertices_count;
 		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + csr->vertices_count));
@@ -426,7 +426,7 @@ struct ll_graph* csr2sym(struct par_env* pe, struct ll_graph* csr, unsigned int 
 	// Finalizing
 		tt += get_nano_time();
 		printf("%-20s \t\t\t %'.3f (s)\n\n","Total time:", tt/1e9);
-		print_graph(out_graph);
+		print_ll_400_graph(out_graph);
 
 	return out_graph;
 }
@@ -441,7 +441,7 @@ struct ll_graph* csr2sym(struct par_env* pe, struct ll_graph* csr, unsigned int 
 		bit 2 : remove self-edges
 		bit 3 : only create offsets_list of the out_graph and do not write edges
 */
-struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int flags)
+struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsigned int flags)
 {
 	// Initial checks
 		unsigned long tt = - get_nano_time();
@@ -460,7 +460,7 @@ struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int 
 		unsigned int* csc_partitions = NULL;
 
 	// Allocating memory
-		struct ll_graph* out_graph =calloc(sizeof(struct ll_graph),1);
+		struct ll_400_graph* out_graph =calloc(sizeof(struct ll_400_graph),1);
 		assert(out_graph != NULL);
 		out_graph->vertices_count = csr->vertices_count;
 		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + csr->vertices_count));
@@ -815,7 +815,7 @@ struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int 
 	// Finalizing
 		tt += get_nano_time();
 		printf("%-20s \t\t\t %'.3f (s)\n\n","Total time:", tt/1e9);
-		print_graph(out_graph);
+		print_ll_400_graph(out_graph);
 		
 	return out_graph;
 }
@@ -831,7 +831,7 @@ struct ll_graph* csr2csc(struct par_env* pe, struct ll_graph* csr, unsigned int 
 		0 : validate
 
 */
-struct w4_graph* add_4B_weight_to_graph(struct par_env* pe, struct ll_graph* g, unsigned int max_weight, unsigned int flags)
+struct ll_404_graph* add_4B_weight_to_ll_404_graph(struct par_env* pe, struct ll_400_graph* g, unsigned int max_weight, unsigned int flags)
 {
 	assert(pe != NULL && g != NULL && max_weight != 0);
 	printf("\n\033[3;36madd_4B_weight_to_graph\033[0;37m, wieght_val: \033[3;36m%'u\033[0;37m .\n",  max_weight);
@@ -843,7 +843,7 @@ struct w4_graph* add_4B_weight_to_graph(struct par_env* pe, struct ll_graph* g, 
 		assert(ttimes != NULL);
 	
 	// Creating graph
-		struct w4_graph* graph =calloc(sizeof(struct w4_graph),1);
+		struct ll_404_graph* graph =calloc(sizeof(struct ll_404_graph),1);
 		assert(graph != NULL);
 		graph->vertices_count = g->vertices_count;
 		graph->edges_count = g->edges_count;
@@ -953,30 +953,16 @@ struct w4_graph* add_4B_weight_to_graph(struct par_env* pe, struct ll_graph* g, 
 		tt += get_nano_time();
 		printf("%-20s \t\t\t %'.3f (s)\n","Total time:", tt/1e9);
 
-		print_graph((struct ll_graph*)graph);
+		print_ll_400_graph((struct ll_400_graph*)graph);
 		
 	return graph;
 }
 
-void release_w4_graph(struct w4_graph* g)
-{
-	numa_free(g->offsets_list, sizeof(unsigned long)*(1 + g->vertices_count));
-	g->offsets_list = NULL;
-
-	numa_free(g->edges_list, 2 * sizeof(unsigned int) * g->edges_count);
-	g->edges_list = NULL;
-
-	free(g);
-	g = NULL;
-
-	return;
-}
-
-struct w4_graph* copy_w4_graph(struct par_env* pe, struct w4_graph* in, struct w4_graph* out)
+struct ll_404_graph* copy_ll_404_graph(struct par_env* pe, struct ll_404_graph* in, struct ll_404_graph* out)
 {
 	if(out == NULL)
 	{
-		out =calloc(sizeof(struct w4_graph),1);
+		out =calloc(sizeof(struct ll_404_graph),1);
 		assert(out != NULL);
 		out->vertices_count = in->vertices_count;
 		out->edges_count = in->edges_count;

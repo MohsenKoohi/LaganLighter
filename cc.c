@@ -15,7 +15,7 @@ exec_info: if not NULL, will have
 	[0]: exec time
 	[1-7]: papi events
 */
-unsigned int* cc_pull(struct par_env* pe, struct ll_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
+unsigned int* cc_pull(struct par_env* pe, struct ll_400_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
 {
 	// Initial checks
 		assert(pe != NULL && g != NULL);
@@ -171,7 +171,7 @@ unsigned int* cc_pull(struct par_env* pe, struct ll_graph* g, unsigned int flags
 		[1-7]: papi events
 		[8]: push max-degree
 */
-unsigned int* cc_thrifty(struct par_env* pe, struct ll_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
+unsigned int* cc_thrifty_400(struct par_env* pe, struct ll_400_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
 {
 	// Initial checks
 		assert(pe != NULL && g != NULL);
@@ -604,7 +604,7 @@ unsigned int* cc_thrifty(struct par_env* pe, struct ll_graph* g, unsigned int fl
 /*
 	It is the thrifty for weighted graphs
 */
-unsigned int* cc_thrifty_w4(struct par_env* pe, struct w4_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
+unsigned int* cc_thrifty_404(struct par_env* pe, struct ll_404_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
 {
 	// Initial checks
 		assert(pe != NULL && g != NULL);
@@ -630,7 +630,7 @@ unsigned int* cc_thrifty_w4(struct par_env* pe, struct w4_graph* g, unsigned int
 		unsigned int partitions_count = pe->threads_count * thread_partitions;
 		unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
 		assert(partitions != NULL);
-		parallel_edge_partitioning((struct ll_graph*)g, partitions, partitions_count);
+		parallel_edge_partitioning((struct ll_400_graph*)g, partitions, partitions_count);
 		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
 
 	// Zero Planting: Assigning the zero label to the vertex with max degree
@@ -1034,7 +1034,7 @@ unsigned int* cc_thrifty_w4(struct par_env* pe, struct w4_graph* g, unsigned int
 	return cc;
 }
 
-void cc_release(struct ll_graph* g, unsigned int* cc)
+void cc_release(struct ll_400_graph* g, unsigned int* cc)
 {
 	assert(cc != NULL && g != NULL);
 	numa_free(cc, sizeof(unsigned int) * g->vertices_count);
@@ -1065,7 +1065,7 @@ void cc_release(struct ll_graph* g, unsigned int* cc)
 		[1-7]: papi events
 */
 
-unsigned int* cc_jt(struct par_env* pe, struct ll_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
+unsigned int* cc_jt(struct par_env* pe, struct ll_400_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
 {
 	// Initial checks
 		assert(pe != NULL && g != NULL);

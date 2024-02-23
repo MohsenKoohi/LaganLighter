@@ -1,7 +1,7 @@
 #ifndef __PARTITIONING_C
 #define __PARTITIONING_C
 
-int serial_edge_partitioning(struct ll_graph* g, unsigned int* borders, int partitions)
+int serial_edge_partitioning(struct ll_400_graph* g, unsigned int* borders, int partitions)
 {
 	assert(partitions > 0 && g->vertices_count > 0);
 
@@ -74,7 +74,7 @@ int serial_edge_partitioning(struct ll_graph* g, unsigned int* borders, int part
 	return 0;
 }
 
-int parallel_edge_partitioning(struct ll_graph* g, unsigned int* borders, int partitions)
+int parallel_edge_partitioning(struct ll_400_graph* g, unsigned int* borders, int partitions)
 {
 	assert(partitions > 0 && g->vertices_count > 0);
 
