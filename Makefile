@@ -1,5 +1,5 @@
 GCC_DIR := ~/gcc9.2
-
+#GCC_DIR := /usr
 OBJ := obj
 GCC := $(GCC_DIR)/bin/gcc 
 GXX := $(GCC_DIR)/bin/g++ 
