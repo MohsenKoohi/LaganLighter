@@ -81,7 +81,7 @@ void print_ll_400_graph(struct ll_400_graph* ret)
 	return;
 }
 
-struct ll_400_graph* get_txt_graph(char* file_name)
+struct ll_400_graph* get_ll_400_txt_graph(char* file_name)
 {
 	// Check if file exists
 		if(access(file_name, F_OK) != 0)
@@ -216,19 +216,20 @@ struct ll_400_graph* get_txt_graph(char* file_name)
 	return g;	
 }
 
-void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
+void __ll_400_webgraph_callback(poplar_read_request* req, poplar_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
 {
 	void** args = (void**) in_args;
 	unsigned long* completed_callbacks_count = (unsigned long*)args[0];
-	unsigned int* edges = (unsigned int*)args[1];
+	unsigned int* graph_edges = (unsigned int*)args[1];
 
 	unsigned long* offsets = (unsigned long*)in_offsets;
 	unsigned long ec = offsets[eb->end_vertex] + eb->end_edge - offsets[eb->start_vertex] - eb->start_edge;
 	unsigned long dest_off = offsets[eb->start_vertex] + eb->start_edge;
-	unsigned int* ui_in_edges = (unsigned int*)in_edges;
+	unsigned long* ul_in_edges = (unsigned long*)in_edges;
 
+	// No need to parallelize this loop as multiple instances of the callbacks are concurrently called by the Poplar 
 	for(unsigned long e = 0; e < ec; e++, dest_off++)
-		edges[dest_off] = ui_in_edges[e];
+		graph_edges[dest_off] = (unsigned int)ul_in_edges[e];
 
 	poplar_csx_release_read_buffers(req, eb, buffer_id);
 
@@ -237,7 +238,7 @@ void __wg_404_callback(poplar_read_request* req, poplar_edge_block* eb, void* in
 	return;
 }
 
-struct ll_400_graph* get_webgraph(char* file_name, char* type)
+struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 {	
 	// Opening graph
 		unsigned long t1=get_nano_time();
@@ -246,15 +247,13 @@ struct ll_400_graph* get_webgraph(char* file_name, char* type)
 		assert(ret == 0);
 
 		poplar_graph_type pgt;
-		if(!strcmp(type, "POPLAR_CSX_WG_400_AP"))
-			pgt = POPLAR_CSX_WG_400_AP;
-		// else if(!strcmp(type, "POPLAR_CSX_WG_404_AP"))
-		// 	pgt = POPLAR_CSX_WG_404_AP;
-		// else if(!strcmp(type, "POPLAR_CSX_WG_800_AP"))
-		// 	pgt = POPLAR_CSX_WG_800_AP;
+		// We should use POPLAR_CSX_WG_400_AP for POPLAR_CSX_WG_400_AP graphs but they can aslo be read by POPLAR_CSX_WG_800_AP.
+		// To support all graphs with |V| <= 2 ^ 32, we read all of thme by POPLAR_CSX_WG_800_AP
+		if(!strcmp(type, "POPLAR_CSX_WG_400_AP") || !strcmp(type, "POPLAR_CSX_WG_400_AP"))
+			pgt = POPLAR_CSX_WG_800_AP;
 		else
 		{
-			assert(0 && "Graph type did not recognize");
+			assert(0 && "get_ll_400_webgraph does not work for this type of graph.");
 			return NULL;
 		}
 		poplar_graph* graph = poplar_open_graph(file_name, pgt, NULL, 0);
@@ -271,6 +270,12 @@ struct ll_400_graph* get_webgraph(char* file_name, char* type)
 			assert (ret == 0);
 			printf("Vertices: %'lu\n",vertices_count);
 			printf("Edges: %'lu\n",edges_count);
+
+			if(vertices_count >= (1UL << 32))
+			{
+				assert(0 && "get_ll_400_webgraph supports reading webgraphs with 4 Bytes ID per vertex.");
+				return NULL;
+			}
 
 			// val = 1UL << (unsigned int)(log(edges_count)/log(2) - 3);
 			// op_args[0] = &val;
@@ -310,7 +315,7 @@ struct ll_400_graph* get_webgraph(char* file_name, char* type)
 		eb.end_vertex = -1UL;
 		eb.end_edge= -1UL;
 
-		poplar_read_request* req= poplar_csx_get_subgraph(graph, &eb, NULL, NULL, __wg_404_callback, (void*)callback_args, NULL, 0);
+		poplar_read_request* req= poplar_csx_get_subgraph(graph, &eb, NULL, NULL, __ll_400_webgraph_callback, (void*)callback_args, NULL, 0);
 		assert(req != NULL);
 
 		struct timespec ts = {0, 200 * 1000 * 1000};

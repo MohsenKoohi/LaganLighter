@@ -42,10 +42,10 @@ int main(int argc, char** args)
 
 		if(!strcmp(graph_type,"text"))
 			// Reading the textual graph that do not require omp 
-			graph = get_txt_graph(dataset);
-		if(!strncmp(graph_type,"POPLAR_CSX_WG_",14))	
+			graph = get_ll_400_txt_graph(dataset);
+		if(!strncmp(graph_type,"POPLAR_CSX_WG_400",14))	
 			// Reading a WebGraph using Poplar library
-			graph = get_webgraph(dataset, graph_type);	
+			graph = get_ll_400_webgraph(dataset, graph_type);
 		assert(graph != NULL);
 
 	// Initializing omp
