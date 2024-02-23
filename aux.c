@@ -25,7 +25,6 @@
 #include <linux/futex.h>
 #include <emmintrin.h>
 #include <math.h>
-#include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

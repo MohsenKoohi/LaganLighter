@@ -4,9 +4,9 @@ OBJ := obj
 GCC := $(GCC_DIR)/bin/gcc 
 GXX := $(GCC_DIR)/bin/g++ 
 LIB := $(GCC_DIR)/lib64:~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib:poplar/lib64:$(LD_LIBRARY_PATH)
-INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) -L poplar/lib64
-INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB))) -I poplar/include
-FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lrt -lnuma -lpoplar
+INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
+INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
+FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lpoplar -lrt
 
 _threads_per_core := $(shell lscpu | grep "Thread(s) per core" | head -n1 | cut -f2 -d":"|xargs)
 _total_threads := $(shell nproc --all) #getconf _NPROCESSORS_ONLN

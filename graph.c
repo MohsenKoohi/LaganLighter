@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <openssl/sha.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <mqueue.h>
