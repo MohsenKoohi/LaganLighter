@@ -878,7 +878,6 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 					// Preparing the seed for randomization
 						// We create random weights that remain the same in different executions
 						// So for each partition we create a repeatable seed
-						
 						// Using splitmix64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds 
 						unsigned long s[4];
 						{
@@ -901,7 +900,7 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 							if(g->edges_list[e] > v)
 								break;
 
-							unsigned int rand_val;
+							unsigned long rand_val;
 							// Setting the rand_val using xoshiro256 (https://prng.di.unimi.it/xoshiro256plusplus.c)
 							{
 								rand_val = s[0] + (((s[0] + s[3]) << 23) | ((s[0] + s[3]) >> (64 - 23)));
