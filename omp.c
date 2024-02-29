@@ -1,41 +1,47 @@
 #ifndef __OMP_C
 #define __OMP_C 1
 
+#include <omp.h>
 #include <locale.h>
 #include <math.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stddef.h>
 #include <numa.h>
+#include <unistd.h>
 #include <numaif.h>
 #include <cpuid.h>
 #include <papi.h>
 #include <sched.h>
-#include <omp.h>
 
 unsigned int papi_events []= {
-	PAPI_L3_TCM,
-	PAPI_TLB_DM,
 	PAPI_LST_INS,
-	PAPI_BR_MSP,
-	PAPI_BR_INS,
+	PAPI_L3_TCM,
+	// PAPI_L2_TCM,
 	PAPI_TOT_INS,
+	PAPI_RES_STL,
+	PAPI_TLB_DM,
+	// PAPI_TLB_IM,
+	PAPI_BR_MSP,
+	// PAPI_BR_INS,
 	PAPI_TOT_CYC
 };
 
+ 
 // Print Time and Idle Percentage
 #define PTIP(step_name) \
-{ \
-	unsigned long idle = 0; \
-	for(unsigned int t=0; t<omp_get_num_threads(); t++) \
-		idle += mt - ttimes[t]; \
-	idle /= omp_get_num_threads(); \
-	printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%)\n",step_name, mt/1e6, 100.0 * idle / mt);	 \
-} 
+  printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%)\n",step_name, mt/1e6, get_idle_percentage(mt, ttimes, omp_get_num_threads()));
 
 #define PT(step_name) \
-{ \
-	printf("%-60s\t\t %'10.2f (ms)\n",step_name, mt/1e6);	 \
+	printf("%-60s\t\t %'10.2f (ms)\n",step_name, mt/1e6); 
+
+double get_idle_percentage(unsigned long nt, unsigned long* threads_nt, unsigned int threads_count)
+{ 
+	unsigned long idle = 0; 
+	for(unsigned int t=0; t<threads_count; t++)
+		idle += nt - threads_nt[t]; 
+	idle /= threads_count; 
+	return 100.0 * idle / nt;
 } 
 
 unsigned long omp_get_thread_num_ulong()
@@ -76,7 +82,15 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 			}
 		}
 		else
+		{
+			if(omp_get_thread_num() == 0)
+			{
+				char event_name[256]="";
+				PAPI_event_code_to_name(in_events[i], event_name);
+				printf("PAPI index: %u, events_count %u, %s (%x), added.\n", i, events_count, event_name, in_events[i], ret, PAPI_strerror(ret));
+			}
 			events_count++;
+		}
 	}
 
 	if(events_count == 0)
@@ -91,7 +105,6 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 	
 	return (events_count << 32) + event_set;
 }
-
 
 void papi_reset(unsigned long papi_arg)
 {
@@ -123,17 +136,16 @@ void papi_stop(unsigned long papi_arg)
 	return;
 }
 
-int papi_read(unsigned long papi_arg, unsigned int* in_events, unsigned int in_events_count, unsigned long* in_values)
+int papi_read(unsigned long papi_arg, unsigned long* in_values)
 {
-	assert(in_events != NULL && in_events_count != 0 && in_values != NULL);
+	assert(in_values != NULL);
 	unsigned int event_set = (unsigned int) papi_arg;
 	unsigned long events_count = (papi_arg >> 32);
 	if(events_count == 0)
 		return -1;
 
 	unsigned long long temp_values[32];
-	unsigned int temp_events[32];
-	assert(in_events_count <= 32 && events_count <= 32);
+	assert(events_count <= 32);
 	int ret = PAPI_read(event_set, temp_values);
 	if(ret != PAPI_OK)
 	{
@@ -141,21 +153,8 @@ int papi_read(unsigned long papi_arg, unsigned int* in_events, unsigned int in_e
 		return -1;
 	}
 
-	unsigned int temp_count = events_count;
-	ret = PAPI_list_events(event_set, temp_events, &temp_count);
-	assert(ret == PAPI_OK);
-	assert(temp_count == events_count);
-
 	for(unsigned int i=0; i<events_count; i++)
-	{
-		// char temp_str[PAPI_MAX_STR_LEN + 1];
-		// PAPI_event_code_to_name(temp_events[i], temp_str);
-		// printf("%-20s (%x)\t\t %'lu \t\t\n",temp_str, temp_events[i], temp_values[i]);
-
-		for(unsigned int j=0; j<in_events_count; j++)
-			if(temp_events[i] == in_events[j])
-				in_values[j] = temp_values[i];
-	}
+		in_values[i] = temp_values[i];
 
 	return 0;
 }
@@ -165,6 +164,8 @@ struct par_env
 	char hostname[128];
 	char cpu_brand[16];
 	unsigned int cpuid_max_eax;
+	unsigned int cpu_family;
+	unsigned int cpu_model;
 
 	unsigned int L1_cache_size;
 	unsigned int L1_coherency_line_size;
@@ -203,29 +204,21 @@ struct par_env
 
 	// papi args
 	unsigned long* papi_args;
-	struct 
-	{
-		unsigned long l3_miss;
-		unsigned long dtlb_miss;
-		unsigned long load_store_ins;
-		unsigned long branch_miss;
-		unsigned long branch_instructions;
-		unsigned long hw_instructions;
-		unsigned long total_cycles;
-	} hw_events;
+	unsigned int hw_events_count;
+	unsigned long hw_events [32];
+	char hw_events_names[32][PAPI_MAX_STR_LEN];
 };
 
 int thread_papi_read(struct par_env* pe)
 {
 	unsigned long temp_vals[32]={0};
 	
-	int ret = papi_read(pe->papi_args[omp_get_thread_num()], papi_events, sizeof(papi_events)/sizeof(papi_events[0]), temp_vals);
+	int ret = papi_read(pe->papi_args[omp_get_thread_num()], temp_vals);
 	if(ret != 0)
 		return -1;
 
-	unsigned long* hw_events = (unsigned long*)&pe->hw_events;
 	for(unsigned int e=0; e<sizeof(papi_events)/sizeof(papi_events[0]); e++)
-		__atomic_add_fetch(&hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
+		__atomic_add_fetch(&pe->hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
 
 	return 0;
 }
@@ -234,28 +227,19 @@ void print_hw_events(struct par_env* pe, unsigned int iterations)
 {
 	if(iterations == 0)
 		iterations = 1;
+
 	printf("\nHW Events:\n");
-	printf("\t%-20s: %'20lu\n","l3_miss",pe->hw_events.l3_miss / iterations);
-	printf("\t%-20s: %'20lu\n","dtlb_miss",pe->hw_events.dtlb_miss / iterations);
-	printf("\t%-20s: %'20lu\n","load_store_ins",pe->hw_events.load_store_ins / iterations);
-	printf("\t%-20s: %'20lu\n","branch_miss",pe->hw_events.branch_miss / iterations);
-	printf("\t%-20s: %'20lu\n","branch_instructions",pe->hw_events.branch_instructions / iterations);
-	printf("\t%-20s: %'20lu\n","hw_instructions",pe->hw_events.hw_instructions / iterations);
-	printf("\t%-20s: %'20lu\n","total_cycles",pe->hw_events.total_cycles / iterations);
+	for(unsigned int e = 0; e < pe->hw_events_count; e++)
+		printf("\t%-20s: %'20lu\n", pe->hw_events_names[e], pe->hw_events[e] / iterations);
 
 	return;
 }
 
 void reset_hw_events(struct par_env* pe)
 {
-	pe->hw_events.l3_miss = 0;
-	pe->hw_events.dtlb_miss = 0;
-	pe->hw_events.load_store_ins = 0;
-	pe->hw_events.branch_miss = 0;
-	pe->hw_events.branch_instructions = 0;
-	pe->hw_events.hw_instructions = 0;
-	pe->hw_events.total_cycles = 0;
-
+	for(int e = 0; e < pe->hw_events_count; e++)
+		pe->hw_events[e] = 0;
+	
 	return;
 }
 
@@ -265,13 +249,9 @@ void copy_reset_hw_events(struct par_env* pe, unsigned long* ev, unsigned int it
 	{
 		if(iterations == 0)
 			iterations = 1;
-		ev[0] = pe->hw_events.l3_miss / iterations;
-		ev[1] = pe->hw_events.dtlb_miss / iterations;
-		ev[2] = pe->hw_events.load_store_ins / iterations;
-		ev[3] = pe->hw_events.branch_miss / iterations;
-		ev[4] = pe->hw_events.branch_instructions / iterations;
-		ev[5] = pe->hw_events.hw_instructions / iterations;
-		ev[6] = pe->hw_events.total_cycles / iterations;
+
+		for(unsigned int e = 0; e < pe->hw_events_count; e++)
+			ev[e] = pe->hw_events[e] / iterations;
 	}
 
 	reset_hw_events(pe);
@@ -296,12 +276,26 @@ struct par_env* initialize_omp_par_env()
 
 
 	// CPU info
-		unsigned int* ebx = (unsigned int*)&pe->cpu_brand[0];
-		unsigned int* ecx = (unsigned int*)&pe->cpu_brand[8];
-		unsigned int* edx = (unsigned int*)&pe->cpu_brand[4];
-		pe->cpu_brand[13]=0;
-		__cpuid_count(0, 0, pe->cpuid_max_eax, *ebx, *ecx, *edx);
-		printf("CPU Manufacturer: \033[1;34m%s\033[0;37m (Max EAX: %u)\n",pe->cpu_brand,pe->cpuid_max_eax);
+		{
+			unsigned int* ebx = (unsigned int*)&pe->cpu_brand[0];
+			unsigned int* ecx = (unsigned int*)&pe->cpu_brand[8];
+			unsigned int* edx = (unsigned int*)&pe->cpu_brand[4];
+			pe->cpu_brand[13]=0;
+			__cpuid_count(0, 0, pe->cpuid_max_eax, *ebx, *ecx, *edx);
+			printf("CPU Manufacturer: \033[1;34m%s\033[0;37m (Max EAX: %u)\n",pe->cpu_brand,pe->cpuid_max_eax);
+		}
+
+		{
+			unsigned int eax, ebx, ecx, edx;
+			__cpuid_count(1, 0, eax, ebx, ecx, edx);
+			pe->cpu_family = ((eax & 0xf00)>>8) + ((eax & 0xff00000)>>20);
+			printf("CPU Family: %u\n", pe->cpu_family);
+	
+			pe->cpu_model = ((eax & 0xf0)>>4) + ((eax & 0xf0000)>>12);
+			// if(((eax & 0xf00)>>8) < 15)
+			// 	pe->cpu_model = (eax & 0xf0)>>4;
+			printf("CPU Model: %u\n", pe->cpu_model);
+		}
 
 	// Reading cache info
 		printf("\n");
@@ -385,7 +379,7 @@ struct par_env* initialize_omp_par_env()
 
 		for(int i=0; i<pe->nodes_count; i++)
 		{
-			unsigned long long free_mem = 0;
+			unsigned long free_mem = 0;
 			unsigned long mem=numa_node_size(i, &free_mem);
 			mem/=(1024*1024*1024);
 			free_mem/=(1024*1024*1024);
@@ -436,6 +430,7 @@ struct par_env* initialize_omp_par_env()
 		printf("\n");
 
 	// Initialize threads
+		assert(getenv("OMP_NUM_THREADS") != NULL);
 		pe->threads_count = atoi(getenv("OMP_NUM_THREADS"));
 		assert(pe->threads_count > 0 && "Zero threads");
 		// omp_set_num_threads(pe->threads_count);
@@ -572,7 +567,6 @@ struct par_env* initialize_omp_par_env()
 	// Initialzing PAPI on threads
 		printf("Using \033[1;31mPAPI\033[0;37m  for measurements.\n");
 		papi_init();
-		assert( sizeof(papi_events)/sizeof(papi_events[0]) ==  sizeof(pe->hw_events)/sizeof(unsigned long));
 		pe->papi_args = calloc(sizeof(unsigned long), pe->threads_count);
 		assert(pe->papi_args != NULL);
 
@@ -580,6 +574,27 @@ struct par_env* initialize_omp_par_env()
 		{
 			unsigned tid = omp_get_thread_num();
 			pe->papi_args[tid] = papi_start(papi_events, sizeof(papi_events)/sizeof(papi_events[0]));
+		}
+
+		{
+			unsigned long papi_arg = pe->papi_args[0];
+			unsigned int event_set = (unsigned int) papi_arg;
+			pe->hw_events_count = (papi_arg >> 32);
+			
+			unsigned int temp_count = pe->hw_events_count;
+			unsigned int temp_events[32];
+
+			int ret = PAPI_list_events(event_set, temp_events, &temp_count);
+			assert(ret == PAPI_OK);
+			assert(temp_count == pe->hw_events_count);
+
+			for(unsigned int i=0; i<pe->hw_events_count; i++)
+			{
+				char temp[PAPI_MAX_STR_LEN];
+				PAPI_event_code_to_name(temp_events[i], temp);
+				sprintf(pe->hw_events_names[i],"%s",temp+5);
+				// printf("%s\n", pe->hw_events_names[i]);
+			}
 		}
 
 		printf("\n\n");
@@ -613,7 +628,7 @@ unsigned long get_free_mem()
 
 	for(int i=0; i<nodes_count; i++)
 	{
-		unsigned long long free_mem = 0;
+		unsigned long free_mem = 0;
 		numa_node_size(i, &free_mem);
 		total_free_mem += free_mem;
 	}
