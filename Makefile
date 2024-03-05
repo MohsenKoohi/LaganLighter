@@ -1,5 +1,8 @@
 GCC_DIR := ~/gcc9.2
-#GCC_DIR := /usr
+ifeq ("$(wildcard $(GCC_DIR)/bin/gcc)","")
+	GCC_DIR := /usr
+endif
+
 OBJ := obj
 GCC := $(GCC_DIR)/bin/gcc 
 GXX := $(GCC_DIR)/bin/g++ 
