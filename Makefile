@@ -34,6 +34,12 @@ else
 endif
 
 $(OBJ)/alg%.obj: alg%.c *.c Makefile poplar
+	@if [ `$(GCC) -dumpversion | cut -f1 -d.` -le 8 ]; then\
+		$(GCC) -dumpversion; \
+		echo -e "\033[0;33mError:\033[0;37m Version 9 or newer is required for gcc.\n\n";\
+		exit -1;\
+	fi
+
 	@echo Creating $@
 	$(GCC) $(INCLUDE_HEADER) $(FLAGS) $< -std=gnu11  $(COMPILE_TYPE) -c -o $@ 
 	@echo 
