@@ -23,8 +23,8 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 3. For using Poplar, a JDK version greater than 15 is required.
 
 ### Compiling and Executing Code
- - Set the path to `gcc` compiler folder in Line 1 of the `Makefile`, if you do not have it in `PATH`.
- - Please modify Line 9, if the required libraries (`libnuma` and `libpapi`) are not in the library path,`LD_LIBRARY_PATH`.
+ - Set the path to `gcc` compiler folder in Line 5 of the `Makefile`, if you do not have it in `PATH`.
+ - Please modify Line 13, if the required libraries (`libnuma` and `libpapi`) are not in the library path,`LD_LIBRARY_PATH`.
  - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the value to variable `graph` to the `make` (e.g. `make alg1_sapco_sort graph="path/to/graph" graph_type=TYPE`), where `TYPE` can be `text`, or one of the types supported by [Poplar](https://blogs.qub.ac.uk/DIPSA/Poplar), e.g.: `POPLAR_CSX_WG_400_AP`, `POPLAR_CSX_WG_404_AP`, or `POPLAR_CSX_WG_800_AP`. 
  - To disable hyper-threading, please use `no_ht=1` with make.
  - To enable debugging (-g of gcc), use `debug=1`.

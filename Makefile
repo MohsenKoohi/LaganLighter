@@ -1,12 +1,16 @@
-GCC_DIR := ~/gcc9.2
-ifeq ("$(wildcard $(GCC_DIR)/bin/gcc)","")
-	GCC_DIR := /usr
+GCC := gcc
+GXX := g++
+LIB := poplar/lib64:$(LD_LIBRARY_PATH)
+
+UP_GCC_DIR := ~/gcc9.2
+ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
+	GCC := $(UP_GCC_DIR)/bin/gcc
+	GXX := $(UP_GCC_DIR)/bin/g++
+	LIB := $(UP_GCC_DIR)/lib64:$(LIB)
 endif
 
 OBJ := obj
-GCC := $(GCC_DIR)/bin/gcc 
-GXX := $(GCC_DIR)/bin/g++ 
-LIB := $(GCC_DIR)/lib64:~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib:poplar/lib64:$(LD_LIBRARY_PATH)
+LIB := $(LIB):~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib 
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
 FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lpoplar -lrt
