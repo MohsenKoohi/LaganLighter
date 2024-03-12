@@ -1,4 +1,4 @@
-[submodule "poplar"]
-	path = poplar
-	url = https://github.com/DIPSA-QUB/Poplar.git
+[submodule "paragrapher"]
+	path = paragrapher
+	url = https://github.com/DIPSA-QUB/Paragrapher.git
 	branch = main

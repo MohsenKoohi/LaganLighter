@@ -1,6 +1,6 @@
 GCC := gcc
 GXX := g++
-LIB := poplar/lib64:$(LD_LIBRARY_PATH)
+LIB := paragrapher/lib64:$(LD_LIBRARY_PATH)
 
 UP_GCC_DIR := ~/gcc9.2
 ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
@@ -13,7 +13,7 @@ OBJ := obj
 LIB := $(LIB):~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib 
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
-FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lpoplar -lrt
+FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt
 
 _threads_per_core := $(shell lscpu | grep "Thread(s) per core" | head -n1 | cut -f2 -d":"|xargs)
 _total_threads := $(shell nproc --all) #getconf _NPROCESSORS_ONLN
@@ -37,7 +37,7 @@ else
 	COMPILE_TYPE := -O3 # -DNDEBUG
 endif
 
-$(OBJ)/alg%.obj: alg%.c *.c Makefile poplar
+$(OBJ)/alg%.obj: alg%.c *.c Makefile paragrapher
 	@if [ `$(GCC) -dumpversion | cut -f1 -d.` -le 8 ]; then\
 		$(GCC) -dumpversion; \
 		echo -e "\033[0;33mError:\033[0;37m Version 9 or newer is required for gcc.\n\n";\
@@ -61,12 +61,12 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "graph: "$(graph)
 	@echo -e "graph_type: "$(graph_type)
 	@echo -e "other args: "$(args)
-	POPLAR_LIB_FOLDER=poplar/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(graph_type) $(args)
+	PARAGRAPHER_LIB_FOLDER=paragrapher/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(graph_type) $(args)
 
-all: poplar Makefile
+all: paragrapher Makefile
 	
-poplar: FORCE
-	make -C poplar all
+paragrapher: FORCE
+	make -C paragrapher all
 	@if [ ! -f data/cnr-2000.graph ]; then \
 		echo -e "--------------------\n\033[1;34mDownloading cnr-2000\033[0;37m"; \
 		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.graph"; \
