@@ -32,7 +32,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 ### Graph Types
 LaganLighter supports  the following graph formats:
  - CSR/CSC graph in textual format, for testing. This format has 4 lines: (i) number of vertices (|V|), (ii) number of edges (|E|), (iii) |V| space-separated numbers showing offsets of the vertices, and (iv) |E| space-separated numbers indicating edges.
- - CSR/CSC [WebGraph](https://law.di.unimi.it/datasets.php): Supported by the [ParaGrapher Graph Loading Library](https://blogs.qub.ac.uk/DIPSA/ParaGrapher) 
+ - Compressed CSR/CSC graphs in WebGraph format are now supported by the [ParaGrapher Graph Loading Library](https://blogs.qub.ac.uk/DIPSA/ParaGrapher) 
  
 ### Bugs & Support
 As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://blogs.qub.ac.uk/DIPSA/LaganLighter) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
