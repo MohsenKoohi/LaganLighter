@@ -247,8 +247,8 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 
 		paragrapher_graph_type pgt;
 		// We should use PARAGRAPHER_CSX_WG_400_AP for PARAGRAPHER_CSX_WG_400_AP graphs but they can aslo be read by PARAGRAPHER_CSX_WG_800_AP.
-		// To support all graphs with |V| <= 2 ^ 32, we read all of thme by PARAGRAPHER_CSX_WG_800_AP
-		if(!strcmp(type, "PARAGRAPHER_CSX_WG_400_AP") || !strcmp(type, "PARAGRAPHER_CSX_WG_400_AP"))
+		// To support all graphs with |V| <= 2 ^ 32, we read all of them by PARAGRAPHER_CSX_WG_800_AP
+		if(!strcmp(type, "PARAGRAPHER_CSX_WG_400_AP") || !strcmp(type, "PARAGRAPHER_CSX_WG_800_AP"))
 			pgt = PARAGRAPHER_CSX_WG_800_AP;
 		else
 		{
@@ -272,7 +272,7 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 
 			if(vertices_count >= (1UL << 32))
 			{
-				assert(0 && "get_ll_400_webgraph supports reading webgraphs with 4 Bytes ID per vertex.");
+				assert(0 && "get_ll_400_webgraph() supports reading webgraphs with 4 Bytes ID per vertex.\n");
 				return NULL;
 			}
 
@@ -341,9 +341,9 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'lu, completed callbacks: %'u/%'u .\n", status, read_edges, completed_callbacks_count, callbacks_count);
+				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'u/%'u .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
-				next_edge_limit_print += 0.05 * edges_count;
+				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
 		}
 		while(status == 0);
@@ -372,7 +372,6 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 
 	return g;	
 }
-
 
 void __ll_404_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
 {
@@ -493,9 +492,9 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'lu, completed callbacks: %'u/%'u .\n", status, read_edges, completed_callbacks_count, callbacks_count);
+				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'u/%'u .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
-				next_edge_limit_print += 0.05 * edges_count;
+				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
 		}
 		while(status == 0);
