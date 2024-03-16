@@ -20,7 +20,8 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 ### Requirements
 1. The `libnuma`, `openmp`, and `papi` are required. If you
 2. A `gcc` with a version greater than 9 are required.
-3. For using ParaGrapher, a JDK version greater than 15 is required.
+3. For using ParaGrapher, `JDK` with a version greater than 15 is required.
+4. `unzip`, `bc`,  and `wget`.
 
 ### Compiling and Executing Code
  - Set the path to `gcc` compiler folder in Line 5 of the `Makefile`, if you do not have it in `PATH`.
