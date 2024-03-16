@@ -7,7 +7,7 @@
 	
 	MASTIFF: Structure-Aware Minimum Spanning Tree/Forest (MST/MSF)
 		
-	https://blogs.qub.ac.uk/GraphProcessing/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/
+	https://blogs.qub.ac.uk/DIPSA/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/
 
 	@INPROCEEDINGS{10.1145/3524059.3532365,
 		author = {Koohi Esfahani, Mohsen and Kilpatrick, Peter and Vandierendonck, Hans},
