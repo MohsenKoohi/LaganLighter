@@ -1,6 +1,7 @@
 GCC := gcc
 GXX := g++
 LIB := paragrapher/lib64:$(LD_LIBRARY_PATH)
+SHELL := /bin/bash
 
 UP_GCC_DIR := ~/gcc9.2
 ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
