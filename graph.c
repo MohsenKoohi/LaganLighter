@@ -96,13 +96,15 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name)
 			char temp[512];
 			sprintf(temp, "head -n1 %s", file_name);
 			FILE *fp = popen(temp, "r");
-			fscanf(fp, "%lu", &vertices_count);
+			int ret = fscanf(fp, "%lu", &vertices_count);
+			assert(ret == 1);
 			pclose(fp);
 			printf("Vertices: %'lu\n",vertices_count);
 
 			sprintf(temp, "head -n2 %s | tail -n1", file_name);
 			fp = popen(temp, "r");
-			fscanf(fp, "%lu", &edges_count);
+			ret = fscanf(fp, "%lu", &edges_count);
+			assert(ret == 1);
 			pclose(fp);
 			printf("Edges: %'lu\n",edges_count);
 		}
@@ -341,7 +343,7 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'u/%'u .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
+				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
 				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
@@ -492,7 +494,7 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'u/%'u .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
+				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
 				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
