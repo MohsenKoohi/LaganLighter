@@ -30,7 +30,7 @@ unsigned int papi_events []= {
  
 // Print Time and Idle Percentage
 #define PTIP(step_name) \
-  printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%)\n",step_name, mt/1e6, get_idle_percentage(mt, ttimes, omp_get_num_threads()));
+  printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%%)\n",step_name, mt/1e6, get_idle_percentage(mt, ttimes, omp_get_num_threads()));
 
 #define PT(step_name) \
 	printf("%-60s\t\t %'10.2f (ms)\n",step_name, mt/1e6); 
@@ -87,7 +87,7 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 			{
 				char event_name[256]="";
 				PAPI_event_code_to_name(in_events[i], event_name);
-				printf("PAPI index: %u, events_count %u, %s (%x), added.\n", i, events_count, event_name, in_events[i], ret, PAPI_strerror(ret));
+				printf("PAPI index: %u, events_count %lu, %s (%x), added.\n", i, events_count, event_name, in_events[i]);
 			}
 			events_count++;
 		}
