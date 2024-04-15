@@ -566,6 +566,7 @@ struct par_env* initialize_omp_par_env()
 
 	// Initialzing PAPI on threads
 		printf("Using \033[1;31mPAPI\033[0;37m  for measurements.\n");
+		assert(sizeof(papi_events)/sizeof(papi_events[0]) <= 32);
 		papi_init();
 		pe->papi_args = calloc(sizeof(unsigned long), pe->threads_count);
 		assert(pe->papi_args != NULL);
