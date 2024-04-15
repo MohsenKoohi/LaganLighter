@@ -11,7 +11,7 @@ ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
 endif
 
 OBJ := obj
-LIB := $(LIB):~/Libs/numactl-2.0.1/usr/local/lib:~/papi6/lib 
+LIB := $(LIB):$(shell realpth ~)/Libs/numactl-2.0.1/usr/local/lib:$(shell realpth ~)/papi6/lib:
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
 FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt
