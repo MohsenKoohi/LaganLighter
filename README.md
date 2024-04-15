@@ -12,7 +12,11 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/DIPSA/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
 
 ### Cloning 
- `git clone https://github.com/DIPSA-QUB/LaganLighter.git --recursive`
+`git clone https://github.com/DIPSA-QUB/LaganLighter.git --recursive`
+
+### Updating through `pull`
+- `git pull --recurse-submodules` or
+- You may set recursive submodule update globally using `git config --global submodule.recurse true` and then `git pull` fetches all updates.
 
 ### How Does It Work?
 [LaganLighter source code documentation](https://blogs.qub.ac.uk/DIPSA/LaganLighter-Source-Code)
