@@ -49,7 +49,7 @@ int main(int argc, char** args)
 			// Reading the textual graph that do not require omp 
 			csr_graph = get_ll_400_txt_graph(dataset);
 		if(!strncmp(graph_type,"PARAGRAPHER_CSX_WG_400",19))	
-			// Reading a WebGraph using Poplar library
+			// Reading a WebGraph using ParaGrapher library
 			csr_graph = get_ll_400_webgraph(dataset, graph_type);
 		assert(csr_graph != NULL);
 
