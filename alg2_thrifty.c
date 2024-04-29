@@ -78,7 +78,16 @@ int main(int argc, char** args)
 		for(unsigned v = 0; v < graph->vertices_count; v++)
 			assert(cc_t[v] == cc_t[cc_p[v]]);
 		
-		// (2) It is also required to check if two vertices are on different components (i.e., having the same cc_p), they do not have the same cc_t. This is checked by matching the total number of compoents. If two vertices are wrongly identified to have the same cc_t values, then either (i) we have different number of compoenents, or (ii) we have the same number of components. Now, we prove that (ii) cannot happen, i.e., (i) should be happened. If we have a correct number of components, and also two vertices on different components but with the same cc_t, then we have to have a component that is splitted by cc_t, i.e., there are at least two vertices on the same component that their cc_t are different. This cannot happen as it has been checked by (1). So, by matching the number of components, we can be sure that two vertices on differnt components cannot be seen as connected by cc_t. 
+		/* (2) It is also required to check if two vertices are on different components (i.e., having the same cc_p), 
+		they do not have the same cc_t. This is checked by matching the total number of compoents. 
+		If two vertices are wrongly identified to have the same cc_t values, then either (i) we have 
+		different number of compoenents, or (ii) we have the same number of components. Now, we prove that 
+		(ii) cannot happen, i.e., (i) should be happened. If we have a correct number of components, and also
+		two vertices on different components but with the same cc_t, then we have to have a component that is splitted 
+		by cc_t, i.e., there are at least two vertices on the same component that their cc_t are different. This cannot happen 
+		as it has been checked by (1). So, by matching the number of components, we can be sure that two vertices on differnt 
+		components cannot be seen as connected by cc_t. 
+		*/
 		assert(ccs_p == ccs_t);
 
 		printf("Validation:\t\t\033[1;33mCorrect\033[0;37m\n");
