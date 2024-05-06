@@ -11,10 +11,10 @@ ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
 endif
 
 OBJ := obj
-LIB := $(LIB):$(shell realpath ~)/Libs/numactl-2.0.1/usr/local/lib:$(shell realpath ~)/papi6/lib:
+LIB := $(LIB):$(shell realpath ~)/Libs/numactl-2.0.1/usr/local/lib:$(shell realpath ~)/Libs/papi7/lib:
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
-FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt
+FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lpfm -lnuma -lparagrapher -lrt
 
 _threads_per_core := $(shell lscpu | grep "Thread(s) per core" | head -n1 | cut -f2 -d":"|xargs)
 _total_threads := $(shell nproc --all) #getconf _NPROCESSORS_ONLN

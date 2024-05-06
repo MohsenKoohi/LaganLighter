@@ -40,7 +40,7 @@ LaganLighter supports  the following graph formats:
  - Compressed CSR/CSC graphs in WebGraph format are now supported by the [ParaGrapher Graph Loading Library](https://blogs.qub.ac.uk/DIPSA/ParaGrapher) 
  
 ### Bugs & Support
-As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003) or [submit an issue](https://github.com/DIPSA-QUB/LaganLighter/issues). 
+As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003) . 
 
 ### Fundings
 The project LaganLighter leading to this Software has been supported by:
