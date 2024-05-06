@@ -1,0 +1,4 @@
+[submodule "paragrapher"]
+	path = paragrapher
+	url = https://github.com/MohsenKoohi/ParaGrapher.git
+	branch = main
