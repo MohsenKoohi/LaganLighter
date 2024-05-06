@@ -1,4 +1,0 @@
-[submodule "paragrapher"]
-	path = paragrapher
-	url = https://github.com/DIPSA-QUB/Paragrapher.git
-	branch = main
