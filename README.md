@@ -22,7 +22,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 [LaganLighter source code documentation](https://blogs.qub.ac.uk/DIPSA/LaganLighter-Source-Code)
 
 ### Requirements
-1. The `libnuma`, `openmp`, and `papi` are required. If you
+1. The `libnuma`, `openmp`, and `papi` are required. 
 2. A `gcc` with a version greater than 9 are required.
 3. For using ParaGrapher, `JDK` with a version greater than 15 is required.
 4. `unzip`, `bc`,  and `wget`.
@@ -37,16 +37,10 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 ### Graph Types
 LaganLighter supports  the following graph formats:
  - CSR/CSC graph in textual format, for testing. This format has 4 lines: (i) number of vertices (|V|), (ii) number of edges (|E|), (iii) |V| space-separated numbers showing offsets of the vertices, and (iv) |E| space-separated numbers indicating edges.
- - Compressed CSR/CSC graphs in WebGraph format are now supported by the [ParaGrapher Graph Loading Library](https://blogs.qub.ac.uk/DIPSA/ParaGrapher) 
+ - Compressed CSR/CSC graphs in WebGraph format are now supported by integrating [ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) as a submodule.
  
 ### Bugs & Support
-As "we write bugs that in particular cases have been tested to work correctly", we try to evaluate and validate the algorithms and their implementations. If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003) . 
-
-### Fundings
-The project LaganLighter leading to this Software has been supported by:
- - PhD scholarship from The Department for the Economy, Northern Ireland and The Queen’s University Belfast 
- - Kelvin-2 supercomputer (EPSRC grant EP/T022175/1) 
- - DiPET (CHIST-ERA-18-SDCDN-002, EPSRC grant EP/T022345/1) 
+If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003) . 
 
 ### License
 Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. You must not use this Software except in compliance with the terms of the License. Unless required by applicable law or agreed upon in writing, this Software is distributed on an "as is" basis, without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose, neither express nor implied. For details see terms of the License (see attached file: LICENSE). 
