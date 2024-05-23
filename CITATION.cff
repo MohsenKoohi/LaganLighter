@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: ""
+message: "Citation"
 authors:
 - family-names: "Koohi Esfahani"
   given-names: "Mohsen"
@@ -8,3 +8,4 @@ title: "On Designing Structure-Aware High-Performance Graph Algorithms"
 version: 0.1
 date-released: 2022-12-07
 url: "https://blogs.qub.ac.uk/DIPSA/ODSAHPGA"
+
