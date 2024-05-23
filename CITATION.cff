@@ -1,8 +1,10 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: ""
 authors:
 - family-names: "Koohi Esfahani"
   given-names: "Mohsen"
   orcid: "https://orcid.org/0000-0002-7465-8003"
-title: "LaganLighter"
-url: "https://github.com/MohsenKoohi/LaganLighter"
+title: "On Designing Structure-Aware High-Performance Graph Algorithms"
+version: 0.1
+date-released: 2022-12-07
+url: "https://blogs.qub.ac.uk/DIPSA/ODSAHPGA"
