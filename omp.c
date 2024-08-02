@@ -26,7 +26,6 @@ unsigned int papi_events []= {
 	// PAPI_BR_INS,
 	PAPI_TOT_CYC
 };
-
  
 // Print Time and Idle Percentage
 #define PTIP(step_name) \
@@ -100,7 +99,8 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 	if(ret != PAPI_OK)
 	{
 		printf("PAPI can't start, %d: %s\n", ret, PAPI_strerror(ret));
-		exit(-1);
+		// exit(-1);
+		return 0UL;
 	}
 	
 	return (events_count << 32) + event_set;
@@ -167,23 +167,29 @@ struct par_env
 	unsigned int cpu_family;
 	unsigned int cpu_model;
 
-	unsigned int L1_cache_size;
 	unsigned int L1_coherency_line_size;
 	unsigned int L1_number_of_sets;
 	unsigned int L1_ways_of_associativity;
+	unsigned int L1_count;
+	unsigned int L1_cache_size;
+	unsigned long L1_caches_total_size;
 
-	unsigned int L2_cache_size;
 	unsigned int L2_coherency_line_size;
 	unsigned int L2_number_of_sets;
 	unsigned int L2_ways_of_associativity;
+	unsigned int L2_count;
+	unsigned int L2_cache_size;
+	unsigned long L2_caches_total_size;
 
-	unsigned int L3_cache_size;
 	unsigned int L3_coherency_line_size;
 	unsigned int L3_number_of_sets;
 	unsigned int L3_ways_of_associativity;
+	unsigned int L3_count;
+	unsigned int L3_cache_size;
+	unsigned long L3_caches_total_size;
 
 	unsigned int nodes_count;
-	unsigned int configured_cpus;
+	unsigned int cpus_count;
 
 	//converting cpu_id to node_id
 	unsigned int * cpu2node;
@@ -191,6 +197,14 @@ struct par_env
 	// list of cpus for each node
 	unsigned int ** node_cpus;
 	unsigned int * node_cpus_length;
+
+	// Sibling groups
+	unsigned int sibling_groups_count;
+		// A node ID is used as index to return the ID of the first sibling group of the node
+	unsigned int * node_sibling_groups_start_ID;  
+		// An ID of sibling group is used as index to return the start index in `sibling_groups_cpus`  
+	unsigned int * sibling_group_cpus_start_offsets;  
+	unsigned int * sibling_groups_cpus;
 
 	// threads on each node
 	unsigned int ** node_threads;
@@ -212,14 +226,17 @@ struct par_env
 int thread_papi_read(struct par_env* pe)
 {
 	unsigned long temp_vals[32]={0};
-	
-	int ret = papi_read(pe->papi_args[omp_get_thread_num()], temp_vals);
+	unsigned long arg = pe->papi_args[omp_get_thread_num()];
+	if(arg == 0)
+		return -2;
+
+	int ret = papi_read(arg, temp_vals);
 	if(ret != 0)
 		return -1;
 
 	for(unsigned int e=0; e<sizeof(papi_events)/sizeof(papi_events[0]); e++)
 		__atomic_add_fetch(&pe->hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
-
+	
 	return 0;
 }
 
@@ -273,7 +290,6 @@ struct par_env* initialize_omp_par_env()
 		gethostname(pe->hostname, 127);
 		printf("\n\nHost name: \033[1;32m%s\033[0;37m\n",pe->hostname);
 	}
-
 
 	// CPU info
 		{
@@ -347,6 +363,15 @@ struct par_env* initialize_omp_par_env()
 			ways_of_associativity_char[count-1]=0;  			// removing \n at the end of file
 			unsigned int ways_of_associativity = atol(ways_of_associativity_char);
 
+			unsigned int caches_count;
+			{
+				char temp[128];
+				sprintf(file_name, "cat /sys/devices/system/cpu/cpu*/cache/index%d/shared_cpu_map|grep -v \"^$\"|sort|uniq| wc -l", i);
+				long ret = run_command(file_name, temp, 128);
+				assert((int)ret == 0);
+				caches_count = atoi(temp);
+			}
+
 			if(strcmp(cache_type,"Instruction"))
 				if(cache_level == 1)
 				{
@@ -354,6 +379,8 @@ struct par_env* initialize_omp_par_env()
 					pe->L1_coherency_line_size = coherency_line_size;
 					pe->L1_number_of_sets = number_of_sets;
 					pe->L1_ways_of_associativity = ways_of_associativity;
+					pe->L1_count = caches_count;
+					pe->L1_caches_total_size = 1UL * pe->L1_count * pe->L1_cache_size;
 				}
 				else if(cache_level == 2)
 				{
@@ -361,6 +388,8 @@ struct par_env* initialize_omp_par_env()
 					pe->L2_coherency_line_size = coherency_line_size;
 					pe->L2_number_of_sets = number_of_sets;
 					pe->L2_ways_of_associativity = ways_of_associativity;
+					pe->L2_count = caches_count;
+					pe->L2_caches_total_size = 1UL * pe->L2_count * pe->L2_cache_size;
 				}
 				else if(cache_level == 3)
 				{
@@ -368,9 +397,18 @@ struct par_env* initialize_omp_par_env()
 					pe->L3_coherency_line_size = coherency_line_size;
 					pe->L3_number_of_sets = number_of_sets;
 					pe->L3_ways_of_associativity = ways_of_associativity;
+					pe->L3_count = caches_count;
+					pe->L3_caches_total_size = 1UL * pe->L3_count * pe->L3_cache_size;
 				}
 			
-			printf("Cache Level \033[3;31m%u\033[0;37m, Type: \033[3;33m%-20s\033[0;37m, Size: \033[3;36m%'10u\033[0;37m (%6s), Line Size: \033[3;35m%'u\033[0;37m B, Sets #: %'7u, Assoc. Ways: %3u \n", cache_level, cache_type, cache_size, cache_size_char, coherency_line_size, number_of_sets, ways_of_associativity);
+			printf("Cache Level: \033[3;31m%u\033[0;37m\n"
+				"  Type: \033[3;33m%-20s\033[0;37m; Size: \033[3;36m%'20u\033[0;37m (%s);\n"
+				"  Line Length: \033[3;35m%'7u\033[0;37m Bytes; Number of sets: %'16u; Associate Ways: %5u;\n"
+				"  Count: %19u; Total size: %15.2f (MB);\n", 
+				cache_level, cache_type, cache_size, cache_size_char, 
+				coherency_line_size, number_of_sets, ways_of_associativity, 
+				caches_count, caches_count *  cache_size / 1024.0 / 1024
+			);
 		}
 
 	// Mem info
@@ -388,10 +426,10 @@ struct par_env* initialize_omp_par_env()
 		}
 		printf("\n");
 
-	// Cpus info 
-		pe->configured_cpus = numa_num_configured_cpus();
-		printf("# Configured CPUS: %'u\n",pe->configured_cpus);
-		pe->cpu2node=calloc(pe->configured_cpus, sizeof(unsigned int));
+	// CPUs
+		pe->cpus_count = numa_num_configured_cpus();
+		printf("# CPUS: %'u\n",pe->cpus_count);
+		pe->cpu2node=calloc(pe->cpus_count, sizeof(unsigned int));
 		struct bitmask *bm = numa_allocate_cpumask();
 
 		pe->node_cpus=calloc(pe->nodes_count , sizeof(unsigned int*));
@@ -400,14 +438,14 @@ struct par_env* initialize_omp_par_env()
 
 		for(int i=0; i< pe->nodes_count; i++)
 		{
-			pe->node_cpus[i]=calloc(pe->configured_cpus, sizeof(unsigned int));
+			pe->node_cpus[i]=calloc(pe->cpus_count, sizeof(unsigned int));
 			assert(pe->node_cpus[i] != NULL);
 
 			numa_bitmask_clearall(bm);
 			assert(0 == numa_node_to_cpus(i,bm));
 
 			printf("CPUs on node \033[1;35m%d\033[0;37m : ",i);
-			for(int j=0; j < pe->configured_cpus; j++)
+			for(int j=0; j < pe->cpus_count; j++)
 				if(numa_bitmask_isbitset(bm, j))
 				{
 					pe->cpu2node[j]=i;
@@ -421,10 +459,137 @@ struct par_env* initialize_omp_par_env()
 		bm = NULL;
 		printf("\n");
 
+	// Reading sibling groups of each node
+	{
+		int* sg_set = calloc(sizeof(int), pe->cpus_count);
+		assert(sg_set != NULL);
+
+		{
+			char temp[128];
+			long ret = run_command("cat /sys/devices/system/cpu/cpu*/topology/thread_siblings|grep -v \"^$\"|sort|uniq|wc -l", temp, 128);
+			assert((int)ret == 0);
+			pe->sibling_groups_count = atoi(temp);
+			assert(pe->sibling_groups_count > 0);
+
+			pe->node_sibling_groups_start_ID = calloc(sizeof(unsigned int), pe->nodes_count + 1);
+			assert(pe->node_sibling_groups_start_ID != NULL);
+			pe->sibling_group_cpus_start_offsets = calloc(sizeof(unsigned int), pe->sibling_groups_count + 1);
+			assert(pe->sibling_group_cpus_start_offsets != NULL);
+			pe->sibling_groups_cpus = calloc(sizeof(unsigned int), pe->cpus_count);
+			assert(pe->sibling_groups_cpus != NULL);
+		}
+
+		int g_counter = 0; // the current number of groups
+		pe->node_sibling_groups_start_ID[0] = g_counter;
+		int sgc_index = 0; // the next index on `sibling_groups_cpus`
+		pe->sibling_group_cpus_start_offsets[0] = sgc_index;
+
+		for(int n = 0; n < pe->nodes_count; n++)
+		{
+			for(int c = 0; c < pe->node_cpus_length[n]; c++)
+			{
+				if(sg_set[pe->node_cpus[n][c]])
+					continue;
+
+				// Extracting cpus in this group
+				{
+					char fn [256];
+					sprintf(fn, "/sys/devices/system/cpu/cpu%d/topology/thread_siblings", pe->node_cpus[n][c]);
+					int fns = get_file_size(fn);
+					char * mem = malloc(fns);
+					assert(mem != NULL);
+					int ret = get_file_contents(fn, mem, fns);
+					assert(ret > 0);
+
+					int last_id = 0;
+					for(int i = ret - 1; i >= 0; i--)
+					{
+						if(mem[i] == ',' || mem[i] == 10)
+							continue;
+
+						int val = 0;
+						if(mem[i] >= '0' && mem[i] <= '9')
+							val = mem[i] - '0';
+						else if(mem[i] >= 'a' && mem[i] <= 'f')
+							val = 10 + (mem[i] - 'a');
+						else
+						{
+							printf("%c\n",mem[i]);
+							assert(0 && "Incorrect char");
+						}
+
+						while(val > 0)
+						{
+							int cpu_id = 0;
+
+							if(val & 1)
+								cpu_id = 0;
+							else if(val & 2)
+								cpu_id = 1;
+							else if(val & 4)
+								cpu_id = 2;
+							else if(val & 8)
+								cpu_id = 3;
+
+							val -= (1U << cpu_id);
+							cpu_id += last_id;
+
+							assert(sg_set[cpu_id] == 0);
+							sg_set[cpu_id] = 1;
+
+							pe->sibling_groups_cpus[sgc_index] = cpu_id;
+							sgc_index++;
+						}
+
+						last_id += 4;
+					}
+
+					free(mem);
+					mem = NULL;
+				}
+
+				g_counter++;
+				pe->sibling_group_cpus_start_offsets[g_counter] = sgc_index;
+			}
+
+			pe->node_sibling_groups_start_ID[n + 1] = g_counter;
+		}
+		assert(g_counter == pe->sibling_groups_count);
+		assert(sgc_index == pe->cpus_count);
+		for(int c = 0; c < pe->cpus_count; c++)
+			assert(sg_set[c] == 1);
+		
+		free(sg_set);
+		sg_set = NULL;
+	}
+
+	// Printing the sibling groups on each node
+		printf("\033[1;34mSibling Groups\033[;37m:\n");
+		for(unsigned int n=0; n<pe->nodes_count; n++)
+		{
+			printf("\033[3;34mNode %u\033[0;37m: ",n);
+			for(int g = pe->node_sibling_groups_start_ID[n]; g < pe->node_sibling_groups_start_ID[n+1]; g++)
+			{
+				printf("[");
+
+				for(int co = pe->sibling_group_cpus_start_offsets[g]; co < pe->sibling_group_cpus_start_offsets[g+1]; co++)
+					if(co <  pe->sibling_group_cpus_start_offsets[g+1] - 1)
+						printf("%u,", pe->sibling_groups_cpus[co]);
+					else
+						printf("%u", pe->sibling_groups_cpus[co]);
+
+				if(g < pe->node_sibling_groups_start_ID[n+1] - 1)
+					printf("], ");
+				else
+					printf("]");
+			}
+
+			printf("\n");
+		}
+		printf("\n");
+
 	// OMP env vars
 		printf("\033[1;31m%-40s\033[0;37m: %s\n","OMP_NUM_THREADS",getenv("OMP_NUM_THREADS"));
-		printf("\033[1;31m%-40s\033[0;37m: %s\n","OMP_PLACES",getenv("OMP_PLACES"));
-		printf("\033[1;31m%-40s\033[0;37m: %s\n","OMP_PROC_BIND",getenv("OMP_PROC_BIND"));
 		printf("\033[1;31m%-40s\033[0;37m: %s\n","OMP_DYNAMIC",getenv("OMP_DYNAMIC"));
 		printf("\033[1;31m%-40s\033[0;37m: %s\n","OMP_WAIT_POLICY",getenv("OMP_WAIT_POLICY"));
 		printf("\n");
@@ -443,7 +608,83 @@ struct par_env* initialize_omp_par_env()
 		pe->thread2cpu = calloc(sizeof(unsigned int), pe->threads_count);
 		pe->threads_next_threads = calloc(sizeof(unsigned int*), pe->threads_count);
 		assert(pe->thread2node != NULL && pe->thread2cpu != NULL && pe->threads_next_threads !=NULL);
+
+		// Setting affinity of threads
+		{
+			int t = 0;
+			int* t2c = calloc(sizeof(int), pe->threads_count);  // thread to cpu
+			assert(t2c != NULL);
+
+			unsigned int remained_cpus = pe->cpus_count;
+			unsigned int remained_threads = pe->threads_count;
+
+			for(int n = 0; n < pe->nodes_count; n++)
+			{
+				unsigned int node_threads = 0;
+				if(n == pe->nodes_count - 1)
+					node_threads = 	remained_threads;
+				else
+					node_threads = ceil(1.0 * remained_threads * pe->node_cpus_length[n] / remained_cpus);
+				remained_cpus -= pe->node_cpus_length[n];
+				remained_threads -= node_threads;
+
+				unsigned int remained_node_threads = node_threads;
+				unsigned int remained_node_cpus = pe->node_cpus_length[n];
+
+				for(int g = pe->node_sibling_groups_start_ID[n]; g < pe->node_sibling_groups_start_ID[n+1]; g++)
+				{
+					unsigned int group_cpus = pe->sibling_group_cpus_start_offsets[g+1] - pe->sibling_group_cpus_start_offsets[g];
+					unsigned int group_threads = 0;
+					if(g == pe->node_sibling_groups_start_ID[n+1] - 1)
+						group_threads = remained_node_threads;
+					else
+						group_threads = ceil(1.0 * remained_node_threads * group_cpus / remained_node_cpus);
+					remained_node_cpus -= group_cpus;
+					remained_node_threads -= group_threads;
+						
+					int remained_group_cpus = group_cpus;
+					int remained_group_threads = group_threads;
+					for(int co = pe->sibling_group_cpus_start_offsets[g]; co < pe->sibling_group_cpus_start_offsets[g+1]; co++)
+					{
+						int cpu_threads = 0;
+						if(co ==  pe->sibling_group_cpus_start_offsets[g+1] - 1)
+							cpu_threads = remained_group_threads;
+						else
+							cpu_threads = ceil(1.0 * remained_group_threads / remained_group_cpus);
+
+						for(int ct = 0; ct < cpu_threads; ct++)
+							t2c[t++] = pe->sibling_groups_cpus[co];
+
+						remained_group_cpus--;
+						remained_group_threads -= cpu_threads;
+					}
+					assert(remained_group_threads == 0);
+					assert(remained_group_cpus == 0);				
+				}
+				assert(remained_node_threads == 0);
+				assert(remained_node_cpus == 0);
+			}
+			assert(remained_threads == 0);
+			assert(remained_cpus == 0);
+			assert(t == pe->threads_count);
+			
+			#pragma omp parallel num_threads(pe->threads_count)
+			{
+				unsigned tid = omp_get_thread_num();
+				assert(tid < pe->threads_count);
+			
+				cpu_set_t cs;
+				CPU_ZERO(&cs);
+				CPU_SET(t2c[tid], &cs);
+				int ret=sched_setaffinity(0, sizeof(cpu_set_t), &cs);
+				assert(ret == 0);
+			}
+
+			free(t2c);
+			t2c = NULL;
+		}
 		
+		// Reading affinity of threads
 		#pragma omp parallel num_threads(pe->threads_count)
 		{
 			unsigned tid = omp_get_thread_num();
@@ -458,7 +699,7 @@ struct par_env* initialize_omp_par_env()
 				assert(ret == 0);
 			}
 
-			for(unsigned int i=0; i<CPU_SETSIZE; i++)
+			for(unsigned int i = 0; i < CPU_SETSIZE; i++)
 				if(CPU_ISSET(i, &cs))
 				{
 					unsigned int old_val = __sync_val_compare_and_swap(&pe->thread2cpu[tid], 0, i);
@@ -492,7 +733,7 @@ struct par_env* initialize_omp_par_env()
 
 		for(unsigned int n=0; n<pe->nodes_count; n++)
 		{
-			printf("Threads on node \033[1;34m%3u\033[;37m: ", n);
+			printf("Threads on node \033[1;34m%3u\033[;37m (%3u#): ", n, pe->node_threads_length[n]);
 			for(unsigned int t=0; t<pe->node_threads_length[n]; t++)
 				printf("%2u, ", pe->node_threads[n][t]);
 			printf("\n");
