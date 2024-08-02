@@ -238,6 +238,36 @@ int get_file_contents(char* file_name, char* buff, int buff_size)
 	return count;
 }
 
+long run_command(char* in_cmd, char* output, unsigned int output_size)
+{
+	assert(in_cmd != NULL);
+
+	int in_cmd_size = strlen(in_cmd);
+	char* cmd = malloc(in_cmd_size + 2 * 64);
+	assert(cmd != NULL);
+	
+	char* res_file = cmd + in_cmd_size + 64;
+	sprintf(res_file, "_temp_res_%lu.txt", get_nano_time());	
+	sprintf(cmd, "%s 1>%s 2>&1", in_cmd, res_file);
+
+	int ret = system(cmd);
+	long ret2 = 0;
+	if(output != NULL && output_size != 0)
+		ret2 = get_file_contents(res_file, output, output_size);
+	ret2 = (ret2 << 32) + ret;
+
+	if(access(res_file, F_OK) == 0)
+	{
+		ret = unlink(res_file);
+		assert(ret == 0);
+	}
+	
+	memset(cmd, 0, in_cmd_size + 2 * 64);
+	free(cmd);
+	cmd = NULL;
+
+	return ret2;
+}
 
 // Binary Search for `val` in [`start`, `end`) of `vals` as a sorted array  
 // returns -1UL if it cannot find

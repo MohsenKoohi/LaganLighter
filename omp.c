@@ -227,15 +227,19 @@ int thread_papi_read(struct par_env* pe)
 {
 	unsigned long temp_vals[32]={0};
 	unsigned long arg = pe->papi_args[omp_get_thread_num()];
-	if(arg == 0)
-		return -2;
+	// if(arg == 0)
+	// 	return -2;
 
-	int ret = papi_read(arg, temp_vals);
-	if(ret != 0)
-		return -1;
-
-	for(unsigned int e=0; e<sizeof(papi_events)/sizeof(papi_events[0]); e++)
-		__atomic_add_fetch(&pe->hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
+	if(arg != 0)
+	{
+		int ret = papi_read(arg, temp_vals);
+		// if(ret != 0)
+		// 	return -1;
+		
+		if(ret == 0)
+			for(unsigned int e=0; e<sizeof(papi_events)/sizeof(papi_events[0]); e++)
+				__atomic_add_fetch(&pe->hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
+	}
 	
 	return 0;
 }
