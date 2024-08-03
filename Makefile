@@ -81,7 +81,7 @@ tests:
 	
 clean:
 	rm -f $(OBJ)/*.obj $(OBJ)/*.o
-	rm -f /dev/shm/paragrapher*
+	make -C paragrapher clean
 	touch *.c 
 	
 touch:
