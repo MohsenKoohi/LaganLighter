@@ -19,7 +19,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 - You may set recursive submodule update globally using `git config --global submodule.recurse true` and then `git pull` fetches all updates.
 
 ### How Does It Work?
-[LaganLighter source code documentation](https://blogs.qub.ac.uk/DIPSA/LaganLighter-Source-Code)
+[LaganLighter source code documentation](docs/readme.me)
 
 ### Requirements
 1. The `libnuma`, `openmp`, and `papi` are required. 
