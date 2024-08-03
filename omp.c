@@ -200,10 +200,8 @@ struct par_env
 
 	// Sibling groups
 	unsigned int sibling_groups_count;
-		// A node ID is used as index to return the ID of the first sibling group of the node
-	unsigned int * node_sibling_groups_start_ID;  
-		// An ID of sibling group is used as index to return the start index in `sibling_groups_cpus`  
-	unsigned int * sibling_group_cpus_start_offsets;  
+	unsigned int * node_sibling_groups_start_ID;  // A node ID is used as index to return the ID of the first sibling group of the node
+	unsigned int * sibling_group_cpus_start_offsets;  // An ID of a sibling group is used as index to return the start index in `sibling_groups_cpus`  
 	unsigned int * sibling_groups_cpus;
 
 	// threads on each node
