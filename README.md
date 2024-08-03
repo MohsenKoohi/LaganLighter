@@ -18,9 +18,6 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 - `git pull --recurse-submodules` or
 - You may set recursive submodule update globally using `git config --global submodule.recurse true` and then `git pull` fetches all updates.
 
-### How Does It Work?
-[LaganLighter source code documentation](docs/readme.me)
-
 ### Requirements
 1. The `libnuma`, `openmp`, and `papi` are required. 
 2. A `gcc` with a version greater than 9 are required.
@@ -44,9 +41,12 @@ LaganLighter supports  the following graph formats:
  	4. |E| space-separated numbers indicating edges.
  
  - Compressed CSR/CSC graphs in WebGraph format are now supported by integrating [ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) as a submodule.
+
+### How Does It Work?
+[LaganLighter source code documentation](docs/readme.md)
  
 ### Bugs & Support
-If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003) . 
+If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003).
 
 ### License
 Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. You must not use this Software except in compliance with the terms of the License. Unless required by applicable law or agreed upon in writing, this Software is distributed on an "as is" basis, without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose, neither express nor implied. For details see terms of the License (see attached file: LICENSE). 
