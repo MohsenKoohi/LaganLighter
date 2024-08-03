@@ -42,6 +42,19 @@
     _a < _b ? _a : _b;       \
 })
 
+double get_standard_deviation(double* data, int count)
+{
+	double sum = 0;
+	for (int i = 0; i < count; i++) 
+		sum += data[i];
+	double avg = sum / count;
+
+	sum = 0;
+	for (int i = 0; i < count; i++) 
+		sum += pow(data[i] - avg, 2);
+
+	return sqrt(sum / count);
+}
 
 int get_host_name(char* input,int in_size)
 {
@@ -218,7 +231,6 @@ unsigned long get_file_size(char* input_file_name)
 	
 	return st.st_size;
 }
-
 
 int get_file_contents(char* file_name, char* buff, int buff_size)
 {
