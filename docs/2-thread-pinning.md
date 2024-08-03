@@ -17,11 +17,10 @@ a number of threads with consecutive IDs are pinned to sibling CPUs.
 
 For a machine with 24 cores, 48 hyperthreads, when 48 threads are requested, we have:
 
-[![](https://github.com/MohsenKoohi/LaganLighter/raw/main/docs/images/affinity-48.jpg)](images/affinity-48.png)
+[![](images/affinity-48.png)](https://github.com/MohsenKoohi/LaganLighter/raw/main/docs/images/affinity-48.jpg)
 
 If 96 threads are created, we have:
 
-[![](https://github.com/MohsenKoohi/LaganLighter/raw/main/docs/images/affinity-96.jpg)](images/affinity-96.png)
-
+[![](images/affinity-96.png)](https://github.com/MohsenKoohi/LaganLighter/raw/main/docs/images/affinity-96.jpg)
 
 --------------------
