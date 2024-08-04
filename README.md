@@ -43,7 +43,7 @@ LaganLighter supports  the following graph formats:
  - Compressed CSR/CSC graphs in WebGraph format are now supported by integrating [ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) as a submodule.
 
 ### How Does It Work?
-[LaganLighter source code documentation](docs/readme.md)
+[LaganLighter documentation](docs/readme.md)
  
 ### Bugs & Support
 If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003).

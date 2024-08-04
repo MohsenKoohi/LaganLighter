@@ -820,8 +820,6 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 	return out_graph;
 }
 
-
-
 /* 
 	Add random weights to the graph
 
@@ -829,7 +827,6 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 	
 	Flags:
 		0 : validate
-
 */
 struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll_400_graph* g, unsigned int max_weight, unsigned int flags)
 {
@@ -929,7 +926,6 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 			mt += get_nano_time();
 			PTIP("Step 1: Assigning weights");
 		
-
 		// Writing the weights for symmetric edges of each vertex with neighbour ID > vertex ID
 			mt = - get_nano_time();
 			#pragma omp parallel  
@@ -990,11 +986,10 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 				printf("Validated.\n");
 			}
 	
-
 	// Setting the offsets
 		#pragma omp parallel for 
 		for(unsigned int v=0; v <= graph->vertices_count; v++)
-		graph->offsets_list[v] = g->offsets_list[v];
+			graph->offsets_list[v] = g->offsets_list[v];
 
 	// Free mem
 		free(ttimes);
@@ -1003,10 +998,39 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 	// Finialzing
 		tt += get_nano_time();
 		printf("%-20s \t\t\t %'.3f (s)\n","Total time:", tt/1e9);
-
 		print_ll_400_graph((struct ll_400_graph*)graph);
 		
 	return graph;
+}
+
+struct ll_400_graph* copy_ll_400_graph(struct par_env* pe, struct ll_400_graph* in, struct ll_400_graph* out)
+{
+	if(out == NULL)
+	{
+		out =calloc(sizeof(struct ll_400_graph),1);
+		assert(out != NULL);
+		out->vertices_count = in->vertices_count;
+		out->edges_count = in->edges_count;
+		out->offsets_list = numa_alloc_interleaved(sizeof(unsigned long)*(1 + in->vertices_count));
+		assert(out->offsets_list != NULL);
+		out->edges_list = numa_alloc_interleaved(sizeof(unsigned int) * in->edges_count);
+		assert(out->edges_list != NULL);
+	}
+	else
+	{
+		assert(out->vertices_count == in->vertices_count && out->offsets_list != NULL);
+		assert(out->edges_count == in->edges_count && out->edges_list != NULL);
+	}
+
+	#pragma omp parallel for 
+	for(unsigned int v=0; v <= out->vertices_count; v++)
+		out->offsets_list[v] = in->offsets_list[v];
+
+	#pragma omp parallel for 
+	for(unsigned long e=0; e < out->edges_count; e++)
+		out->edges_list[e] = in->edges_list[e];
+
+	return out;
 }
 
 struct ll_404_graph* copy_ll_404_graph(struct par_env* pe, struct ll_404_graph* in, struct ll_404_graph* out)
@@ -1038,7 +1062,5 @@ struct ll_404_graph* copy_ll_404_graph(struct par_env* pe, struct ll_404_graph* 
 
 	return out;
 }
-
-
 
 #endif

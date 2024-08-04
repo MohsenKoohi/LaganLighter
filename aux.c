@@ -27,6 +27,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 
 #define max(a,b)             \
 ({                           \
@@ -328,5 +329,59 @@ unsigned long uint_binary_search(unsigned int* vals, unsigned long in_start, uns
 	assert("Don't reach here.");
 	return -1UL;
 }
+
+void flush_os_cache()
+{
+	char* ts = calloc(1024 + get_nprocs()/4, 1);
+	assert(ts != NULL);
+	sprintf(ts, "taskset 0x");
+	for(int i = 0; i < get_nprocs() / 4; i++)
+		sprintf(ts + strlen(ts), "F");
+	
+	sprintf(ts + strlen(ts), " ./flushcache.sh");
+	run_command(ts, NULL, 0);
+
+	free(ts);
+	ts = NULL;
+
+	return;
+}
+
+void* create_shm(char* shm_file_name, unsigned long length)
+{
+	assert(shm_file_name != NULL);
+	assert(length > 0);
+
+ 	int shm_fd = shm_open(shm_file_name, O_RDWR|O_CREAT, 0644);
+ 	if(shm_fd == -1)
+	{
+		printf("create_shm(), error in shm_open() %d, %s .\033[0;37m \n", errno, strerror(errno));
+		assert(shm_fd != -1);
+	}	
+
+	int ret = ftruncate(shm_fd, length);
+	if(ret != 0)
+	{
+		printf("create_shm(), error in ftruncate() %d, %s .\033[0;37m \n", errno, strerror(errno));
+		ret = shm_unlink(shm_file_name);
+		assert(ret == 0);
+		return NULL;
+	}
+
+	void* mem = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED , shm_fd, 0);
+	if(mem == MAP_FAILED)
+	{
+		printf("create_shm(), error in mmap() %d, %s .\033[0;37m \n", errno, strerror(errno));
+		ret = shm_unlink(shm_file_name);
+		assert(ret == 0);
+		return NULL;
+	}
+
+	close(shm_fd);
+	shm_fd = -1;
+
+	return mem;
+}
+
 
 #endif

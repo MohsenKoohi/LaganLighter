@@ -4,7 +4,7 @@
 #
 # Having a sudo access to the machine with a Linux distribution, 
 # the /drop_caches.sh file can be created by running the following three steps
-# 	sudo echo -e '#!/bin/bash\n\necho 3 > /proc/sys/vm/drop_caches' > /drop_caches.sh
+# 	sudo echo -e '#!/bin/bash\n\necho 3 > /proc/sys/vm/drop_caches\n' > /drop_caches.sh
 # 	sudo chmod a+x /drop_caches.sh
 # 	sudo echo -e 'ALL  ALL = (ALL) NOPASSWD: /drop_caches.sh\n' >> /etc/sudoers
 #

@@ -21,16 +21,23 @@ int main(int argc, char** args)
 			graph_type = args[2];
 		}
 
+		int read_flags = 0;
 		if(!strcmp(graph_type,"text"))
-			// Reading the textual graph that do not require omp 
-			graph = get_ll_400_txt_graph(dataset);
+			// Reading the textual graph that does not require omp 
+			graph = get_ll_400_txt_graph(dataset, &read_flags);
 		if(!strncmp(graph_type,"PARAGRAPHER_CSX_WG_400",19))	
 			// Reading a WebGraph using ParaGrapher library
 			graph = get_ll_400_webgraph(dataset, graph_type);
 		assert(graph != NULL);
-
+		
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
+
+	// Store graph in shm
+		if((read_flags & (1U << 31)) == 0)
+		{
+			store_shm_ll_400_graph(pe, dataset, graph);
+		}
 
 		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
 		assert(exec_info != NULL);
@@ -68,7 +75,10 @@ int main(int argc, char** args)
 		release_numa_interleaved_ll_400_graph(csc_graph);
 		csc_graph = NULL;
 
-		release_numa_interleaved_ll_400_graph(csr_graph);
+		if(read_flags & (1U << 31))
+			release_shm_ll_400_graph(csr_graph);
+		else
+			release_numa_interleaved_ll_400_graph(csr_graph);
 		csr_graph = NULL;
 		graph = NULL;
 

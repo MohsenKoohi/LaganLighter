@@ -15,6 +15,7 @@
 #include <mqueue.h>
 #include <time.h>
 #include <pthread.h>
+#include <libgen.h>
 
 #include "omp.c"
 #include "paragrapher.h"
@@ -80,9 +81,45 @@ void print_ll_400_graph(struct ll_400_graph* ret)
 	return;
 }
 
-struct ll_400_graph* get_ll_400_txt_graph(char* file_name)
+char* get_shm_graph_name(char* file_name)
 {
-	// Check if file exists
+	assert(file_name != NULL);
+
+	char* abs_file_name = malloc(PATH_MAX);
+	assert(abs_file_name != NULL);
+	{
+		char* ret = realpath(file_name, abs_file_name);
+		assert(ret != NULL && ret == abs_file_name);
+	}
+
+	int len = strlen(abs_file_name);
+	char* ret = malloc(len + 16);
+	assert(ret != NULL);
+
+	sprintf(ret, "ll_graph%s", abs_file_name);
+	for(int i = 8; i <= 8 + len; i++)
+		if(ret[i] == '/')
+			ret[i] = '_';
+
+	free(abs_file_name);
+	abs_file_name = NULL;
+
+	return ret;
+}
+
+/*
+	`flags`:
+		bit 0: Read from storage. Do not use the copy in /dev/shm (if it exists).
+		.
+		.
+		.
+		bit 31: Will be set by the function if the graph has been mapped from a copy in /dev/shm
+*/
+struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
+{
+	// Checks 
+		assert(flags != NULL);
+
 		if(access(file_name, F_OK) != 0)
 		{
 			printf("Error: file \"%s\" does not exist\n",file_name);
@@ -107,6 +144,42 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name)
 			assert(ret == 1);
 			pclose(fp);
 			printf("Edges: %'lu\n",edges_count);
+		}
+
+	// Check if the graph exists in /dev/shm
+		char* shm_name = get_shm_graph_name(file_name);
+		printf("shm_name: %s\n", shm_name);
+		unsigned long graph_size = (2 + vertices_count + 1) * sizeof(unsigned long) + edges_count * sizeof(unsigned int);
+		if(((*flags) & (1U << 0)) == 0)
+		{
+			int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+			if(shm_fd > 0)
+			{
+				printf("Shared memory file exists .\n");
+				unsigned long* ul_graph = (unsigned long*)mmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, shm_fd, 0);
+				if(ul_graph == MAP_FAILED)
+				{
+					printf("Couldn't get graph -> mmap error : %d, %s\n", errno, strerror(errno) );
+					assert (ul_graph != MAP_FAILED);
+				}
+				close(shm_fd);
+				shm_fd = -1;
+
+				assert(ul_graph[0] == vertices_count);
+				assert(ul_graph[1] == edges_count);
+
+				struct ll_400_graph* g = malloc(sizeof(struct ll_400_graph));
+				assert(g != NULL);
+				g->vertices_count = ul_graph[0];
+				g->edges_count = ul_graph[1];
+				g->offsets_list = &ul_graph[2];
+				g->edges_list = (unsigned int*)(&ul_graph[ 2 + ul_graph[0] + 1 ]);
+
+				print_ll_400_graph(g);
+
+				(*flags) |= (1U << 31);
+				return g;
+			}
 		}
 
 	// Allocate memory
@@ -212,7 +285,17 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name)
 		printf("Reading %'.1f (MB) completed in %'.3f (seconds)\n", total_read_bytes/1e6, (get_nano_time() - t1)/1e9); 
 	}
 
-	print_ll_400_graph(g);
+	// Printing the first vals in the read graph
+		print_ll_400_graph(g);
+
+	// Flush the OS cache
+		flush_os_cache();
+
+	// Release mem
+		free(shm_name);
+		shm_name = NULL;
+
+	(*flags) &= ~(1U << 31);
 
 	return g;	
 }
@@ -228,7 +311,7 @@ void __ll_400_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	unsigned long dest_off = offsets[eb->start_vertex] + eb->start_edge;
 	unsigned long* ul_in_edges = (unsigned long*)in_edges;
 
-	// No need to parallelize this loop as multiple instances of the callbacks are concurrently called by the ParaGrapher 
+	// No need to parallelize this loop as multiple instances of this callback are concurrently called by the ParaGrapher 
 	for(unsigned long e = 0; e < ec; e++, dest_off++)
 		graph_edges[dest_off] = (unsigned int)ul_in_edges[e];
 
@@ -248,8 +331,12 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 		assert(ret == 0);
 
 		paragrapher_graph_type pgt;
-		// We should use PARAGRAPHER_CSX_WG_400_AP for PARAGRAPHER_CSX_WG_400_AP graphs but they can aslo be read by PARAGRAPHER_CSX_WG_800_AP.
-		// To support all graphs with |V| <= 2 ^ 32, we read all of them by PARAGRAPHER_CSX_WG_800_AP
+		/*
+			 We should use PARAGRAPHER_CSX_WG_400_AP for PARAGRAPHER_CSX_WG_400_AP graphs but they can 
+			 aslo be read by PARAGRAPHER_CSX_WG_800_AP. So, to support all graphs with |V| <= 2 ^ 32, 
+			 we read all of them by PARAGRAPHER_CSX_WG_800_AP.
+		*/
+
 		if(!strcmp(type, "PARAGRAPHER_CSX_WG_400_AP") || !strcmp(type, "PARAGRAPHER_CSX_WG_800_AP"))
 			pgt = PARAGRAPHER_CSX_WG_800_AP;
 		else
@@ -387,7 +474,7 @@ void __ll_404_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	unsigned long dest_off = offsets[eb->start_vertex] + eb->start_edge;
 	unsigned long* ul_in_edges = (unsigned long*)in_edges;
 
-	// No need to parallelize this loop as multiple instances of the callbacks are concurrently called by the ParaGrapher 
+	// No need to parallelize this loop as multiple instances of this callback are concurrently called by the ParaGrapher 
 	for(unsigned long e = 0; e < ec; e++, dest_off++)
 		graph_edges[dest_off] = ul_in_edges[e];
 
@@ -526,6 +613,33 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
 	return g;	
 }
 
+void store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
+{
+	assert(file_name != NULL && g != NULL);
+
+	char* shm_name = get_shm_graph_name(file_name);
+	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
+	
+	unsigned long* sg = create_shm(shm_name, graph_size);
+
+	sg[0] = g->vertices_count;
+	sg[1] = g->edges_count;
+
+	#pragma omp parallel for 
+	for(unsigned int v=0; v <= g->vertices_count; v++)
+		sg[2 + v] = g->offsets_list[v];
+
+	unsigned int* sg_edges =(unsigned int*)(sg + 2 + g->vertices_count + 1);
+	#pragma omp parallel for 
+	for(unsigned long e=0; e < g->edges_count; e++)
+		sg_edges[e] = g->edges_list[e];
+
+	munmap(sg, graph_size);
+	sg = NULL;
+
+	return;
+}
+
 void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 {
 	assert(g!= NULL && g->offsets_list != NULL);
@@ -545,6 +659,21 @@ void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 	return;
 }
 
+void release_shm_ll_400_graph(struct ll_400_graph* g)
+{
+	assert(g != NULL);
+
+	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
+	munmap(g->offsets_list - 2, graph_size);
+
+	g->offsets_list = NULL;
+	g->edges_list = NULL;
+
+	free(g);
+	g = NULL;
+
+	return;
+}
 
 void release_numa_interleaved_ll_800_graph(struct ll_800_graph* g)
 {
@@ -580,6 +709,16 @@ void release_numa_interleaved_ll_404_graph(struct ll_404_graph* g)
 
 	free(g);
 	g = NULL;
+
+	return;
+}
+
+void release_shm_ll_404_graph(struct ll_404_graph* g)
+{
+	assert(g != NULL);
+
+	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + 2UL * g->edges_count * sizeof(unsigned int);
+	munmap((void*)g, graph_size);
 
 	return;
 }

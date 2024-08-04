@@ -84,7 +84,7 @@ int main(int argc, char** args)
 		if(wgraph->vertices_count < 1024)
 		{
 			// the implementation of prim changes the topology
-			struct ll_404_graph* cwg = copy_ll_404_graph(pe, wgraph, NULL); 
+			struct ll_404_graph* cwg = copy_ll_404_graph(wgraph, NULL); 
 			
 			res_prim = msf_prim_serial(pe, cwg, 0);
 
