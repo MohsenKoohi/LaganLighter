@@ -335,7 +335,7 @@ void flush_os_cache()
 	char* ts = calloc(1024 + get_nprocs()/4, 1);
 	assert(ts != NULL);
 	sprintf(ts, "taskset 0x");
-	for(int i = 0; i < get_nprocs() / 4; i++)
+	for(int i = 0; i < get_nprocs() / 4 + 1; i++)
 		sprintf(ts + strlen(ts), "F");
 	
 	sprintf(ts + strlen(ts), " ./flushcache.sh");

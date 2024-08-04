@@ -846,7 +846,7 @@ struct par_env* initialize_omp_par_env()
 	return pe;
 }
 
-void numa_interleave_allocated_memory(void* addr, unsigned long page_size)
+void numa_interleave_allocated_memory(void* addr, unsigned long mem_size)
 {	
 	unsigned long maxnode = 64;
 	int num_nodes = numa_num_configured_nodes();
@@ -855,7 +855,7 @@ void numa_interleave_allocated_memory(void* addr, unsigned long page_size)
 	unsigned long nodemask = 0UL;
 	for(int n=0; n < num_nodes; n++)
 		nodemask += (1UL << n);
-	long res = mbind(addr, page_size, MPOL_INTERLEAVE, &nodemask, maxnode, 0);
+	long res = mbind(addr, mem_size, MPOL_INTERLEAVE, &nodemask, maxnode, 0);
 	if(res != 0)
 	{
 		printf("can't mbind : %d %s\n",errno, strerror(errno));

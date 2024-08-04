@@ -107,6 +107,41 @@ char* get_shm_graph_name(char* file_name)
 	return ret;
 }
 
+struct ll_400_graph* get_shm_ll_400_graph(char* file_name, unsigned long vertices_count, unsigned long edges_count)
+{
+	char* shm_name = get_shm_graph_name(file_name);
+	printf("shm_name: %s\n", shm_name);
+	unsigned long graph_size = (2 + vertices_count + 1) * sizeof(unsigned long) + edges_count * sizeof(unsigned int);
+
+	struct ll_400_graph* g = NULL;
+	int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+	if(shm_fd > 0)
+	{
+		printf("Shared memory file exists .\n");
+		unsigned long* ul_graph = (unsigned long*)mmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, shm_fd, 0);
+		if(ul_graph == MAP_FAILED)
+		{
+			printf("Couldn't get graph -> mmap error : %d, %s\n", errno, strerror(errno) );
+			assert (ul_graph != MAP_FAILED);
+		}
+		close(shm_fd);
+		shm_fd = -1;
+		
+		g = malloc(sizeof(struct ll_400_graph));
+		assert(g != NULL);
+		g->vertices_count = ul_graph[0];
+		g->edges_count = ul_graph[1];
+		g->offsets_list = &ul_graph[2];
+		g->edges_list = (unsigned int*)(&ul_graph[ 2 + ul_graph[0] + 1 ]);
+	}
+
+	// Release mem
+		free(shm_name);
+		shm_name = NULL;
+
+	return g;
+}
+
 /*
 	`flags`:
 		bit 0: Read from storage. Do not use the copy in /dev/shm (if it exists).
@@ -147,41 +182,20 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 		}
 
 	// Check if the graph exists in /dev/shm
-		char* shm_name = get_shm_graph_name(file_name);
-		printf("shm_name: %s\n", shm_name);
-		unsigned long graph_size = (2 + vertices_count + 1) * sizeof(unsigned long) + edges_count * sizeof(unsigned int);
 		if(((*flags) & (1U << 0)) == 0)
 		{
-			int shm_fd = shm_open(shm_name, O_RDONLY, 0);
-			if(shm_fd > 0)
+			struct ll_400_graph* g = get_shm_ll_400_graph(file_name, vertices_count, edges_count);
+			if(g != NULL)
 			{
-				printf("Shared memory file exists .\n");
-				unsigned long* ul_graph = (unsigned long*)mmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, shm_fd, 0);
-				if(ul_graph == MAP_FAILED)
-				{
-					printf("Couldn't get graph -> mmap error : %d, %s\n", errno, strerror(errno) );
-					assert (ul_graph != MAP_FAILED);
-				}
-				close(shm_fd);
-				shm_fd = -1;
-
-				assert(ul_graph[0] == vertices_count);
-				assert(ul_graph[1] == edges_count);
-
-				struct ll_400_graph* g = malloc(sizeof(struct ll_400_graph));
-				assert(g != NULL);
-				g->vertices_count = ul_graph[0];
-				g->edges_count = ul_graph[1];
-				g->offsets_list = &ul_graph[2];
-				g->edges_list = (unsigned int*)(&ul_graph[ 2 + ul_graph[0] + 1 ]);
+				assert(vertices_count == g->vertices_count);
+				assert(edges_count == g->edges_count);
 
 				print_ll_400_graph(g);
-
 				(*flags) |= (1U << 31);
 				return g;
 			}
 		}
-
+		
 	// Allocate memory
 		struct ll_400_graph* g =calloc(sizeof(struct ll_400_graph),1);
 		assert(g != NULL);
@@ -290,10 +304,6 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 
 	// Flush the OS cache
 		flush_os_cache();
-
-	// Release mem
-		free(shm_name);
-		shm_name = NULL;
 
 	(*flags) &= ~(1U << 31);
 
@@ -621,6 +631,7 @@ void store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_g
 	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
 	
 	unsigned long* sg = create_shm(shm_name, graph_size);
+	numa_interleave_allocated_memory(sg, graph_size);
 
 	sg[0] = g->vertices_count;
 	sg[1] = g->edges_count;
@@ -662,6 +673,7 @@ void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 void release_shm_ll_400_graph(struct ll_400_graph* g)
 {
 	assert(g != NULL);
+	assert( (void*)(g->offsets_list - 2) == (void*)(g->edges_list - 2 * (2 + g->vertices_count + 1)) );
 
 	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
 	munmap(g->offsets_list - 2, graph_size);
