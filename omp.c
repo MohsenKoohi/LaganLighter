@@ -735,7 +735,7 @@ struct par_env* initialize_omp_par_env()
 
 		for(unsigned int n=0; n<pe->nodes_count; n++)
 		{
-			printf("Threads on node \033[1;34m%3u\033[;37m (%3u#): ", n, pe->node_threads_length[n]);
+			printf("Threads on node \033[1;34m%3u\033[;37m (#%3u): ", n, pe->node_threads_length[n]);
 			for(unsigned int t=0; t<pe->node_threads_length[n]; t++)
 				printf("%2u, ", pe->node_threads[n][t]);
 			printf("\n");

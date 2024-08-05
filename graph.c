@@ -117,7 +117,7 @@ struct ll_400_graph* get_shm_ll_400_graph(char* file_name, unsigned long vertice
 	int shm_fd = shm_open(shm_name, O_RDONLY, 0);
 	if(shm_fd > 0)
 	{
-		printf("Shared memory file exists .\n");
+		printf("Shared memory file exists.\n");
 		unsigned long* ul_graph = (unsigned long*)mmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, shm_fd, 0);
 		if(ul_graph == MAP_FAILED)
 		{
@@ -148,7 +148,7 @@ struct ll_400_graph* get_shm_ll_400_graph(char* file_name, unsigned long vertice
 		.
 		.
 		.
-		bit 31: Will be set by the function if the graph has been mapped from a copy in /dev/shm
+		bit 31: Will be set by the function if the graph has been mapped from a copy in /dev/shm.
 */
 struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 {
@@ -647,6 +647,15 @@ void store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_g
 
 	munmap(sg, graph_size);
 	sg = NULL;
+
+	{
+		int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+		int ret = fchmod(shm_fd, S_IRUSR|S_IRGRP|S_IROTH);
+		assert(ret == 0);
+	
+		close(shm_fd);
+		shm_fd = -1;
+	}
 
 	return;
 }

@@ -1,8 +1,8 @@
 #ifndef __AUX_C
 #define __AUX_C
 
-#ifndef _BSD_SOURCE
-	#define _BSD_SOURCE
+#ifndef _DEFAULT_SOURCE // _BSD_SOURCE
+	#define _DEFAULT_SOURCE // _BSD_SOURCE
 #endif
 #define _GNU_SOURCE
 
