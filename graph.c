@@ -660,6 +660,21 @@ void store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_g
 	return;
 }
 
+void delete_shm_graph_from(char* file_name)
+{
+	assert(file_name != NULL);
+
+	char* shm_name = get_shm_graph_name(file_name);
+	int ret = shm_unlink(shm_name);
+	assert(ret == 0);
+
+	free(shm_name);
+	shm_name = NULL;
+
+	return;
+}
+
+
 void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 {
 	assert(g!= NULL && g->offsets_list != NULL);
@@ -737,9 +752,16 @@ void release_numa_interleaved_ll_404_graph(struct ll_404_graph* g)
 void release_shm_ll_404_graph(struct ll_404_graph* g)
 {
 	assert(g != NULL);
+	assert( (void*)(g->offsets_list - 2) == (void*)(g->edges_list - 2 * (2 + g->vertices_count + 1)) );
 
-	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + 2UL * g->edges_count * sizeof(unsigned int);
-	munmap((void*)g, graph_size);
+	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + 2 * g->edges_count * sizeof(unsigned int);
+	munmap(g->offsets_list - 2, graph_size);
+
+	g->offsets_list = NULL;
+	g->edges_list = NULL;
+
+	free(g);
+	g = NULL;
 
 	return;
 }

@@ -35,9 +35,7 @@ int main(int argc, char** args)
 
 	// Store graph in shm
 		if((read_flags & (1U << 31)) == 0)
-		{
 			store_shm_ll_400_graph(pe, dataset, graph);
-		}
 
 		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
 		assert(exec_info != NULL);
