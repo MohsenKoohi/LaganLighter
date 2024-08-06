@@ -85,10 +85,21 @@ char* get_shm_graph_name(char* file_name)
 {
 	assert(file_name != NULL);
 
+	char* cfn = NULL;
+	if(access(file_name, F_OK) == 0 )
+		cfn = file_name;
+	else
+	{
+		cfn = malloc(PATH_MAX);
+		assert(cfn != NULL);
+		sprintf(cfn, "%s.graph", file_name);
+		assert(access(cfn, F_OK) == 0);
+	}
+
 	char* abs_file_name = malloc(PATH_MAX);
 	assert(abs_file_name != NULL);
 	{
-		char* ret = realpath(file_name, abs_file_name);
+		char* ret = realpath(cfn, abs_file_name);
 		assert(ret != NULL && ret == abs_file_name);
 	}
 
@@ -103,6 +114,12 @@ char* get_shm_graph_name(char* file_name)
 
 	free(abs_file_name);
 	abs_file_name = NULL;
+
+	if(cfn != file_name)
+	{
+		free(cfn);
+		cfn = NULL;
+	}
 
 	return ret;
 }
@@ -182,7 +199,7 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 		}
 
 	// Check if the graph exists in /dev/shm
-		if(((*flags) & (1U << 0)) == 0)
+		if((*flags & 1U<<0) == 0)
 		{
 			struct ll_400_graph* g = get_shm_ll_400_graph(file_name, vertices_count, edges_count);
 			if(g != NULL)
@@ -191,7 +208,7 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 				assert(edges_count == g->edges_count);
 
 				print_ll_400_graph(g);
-				(*flags) |= (1U << 31);
+				*flags |= 1U<<31;
 				return g;
 			}
 		}
@@ -305,7 +322,7 @@ struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 	// Flush the OS cache
 		flush_os_cache();
 
-	(*flags) &= ~(1U << 31);
+	*flags &= ~(1U<<31);
 
 	return g;	
 }
@@ -332,9 +349,9 @@ void __ll_400_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	return;
 }
 
-struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
+struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type, unsigned int* flags)
 {	
-	// Opening graph
+	// Opening the graph
 		unsigned long t1=get_nano_time();
 			
 		int ret = paragrapher_init();
@@ -381,6 +398,21 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 			// assert (ret == 0);
 		}
 
+	// Check if the graph exists in /dev/shm
+		if((*flags & 1U<<0) == 0)
+		{
+			struct ll_400_graph* g = get_shm_ll_400_graph(file_name, vertices_count, edges_count);
+			if(g != NULL)
+			{
+				assert(vertices_count == g->vertices_count);
+				assert(edges_count == g->edges_count);
+
+				print_ll_400_graph(g);
+				*flags |= 1U<<31;
+				return g;
+			}
+		}
+	
 	// Allocating memory
 		struct ll_400_graph* g =calloc(sizeof(struct ll_400_graph),1);
 		assert(g != NULL);
@@ -467,7 +499,14 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type)
 		
 	printf("Reading completed in %'.3f (seconds)\n", (get_nano_time() - t1)/1e9); 
 
-	print_ll_400_graph(g);
+	// Printing the first vals in the read graph
+		print_ll_400_graph(g);
+
+	// Flush the OS cache
+		flush_os_cache();
+
+	*flags &= ~(1U<<31);
+
 
 	return g;	
 }
@@ -673,7 +712,6 @@ void delete_shm_graph_from(char* file_name)
 
 	return;
 }
-
 
 void release_numa_interleaved_ll_400_graph(struct ll_400_graph* g)
 {
