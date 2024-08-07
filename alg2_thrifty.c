@@ -19,7 +19,6 @@
 	  publisher={IEEE Computer Society},
 	  doi={10.1109/Cluster48925.2021.00042}
 	}
-
 */
 
 int main(int argc, char** args)
@@ -28,55 +27,49 @@ int main(int argc, char** args)
 		setlocale(LC_NUMERIC, "");
 		setbuf(stdout, NULL);
 		setbuf(stderr, NULL);
+		read_env_vars();
 		printf("\n");
 
 	// Reading the grpah
-		char* dataset_file_name = "data/test_csr.txt";
-		char* graph_type = "text";
 		struct ll_400_graph* graph = NULL;
-		if(argc >= 3)
-		{
-			dataset_file_name = args[1];
-			graph_type = args[2];
-		}
-
 		int read_flags = 0;
-		if(!strcmp(graph_type,"text"))
+		
+		if(!strcmp(LL_INPUT_GRAPH_TYPE,"text"))
 			// Reading the textual graph that do not require omp 
-			graph = get_ll_400_txt_graph(dataset_file_name, &read_flags);
-		if(!strncmp(graph_type,"PARAGRAPHER_CSX_WG_400",19))	
+			graph = get_ll_400_txt_graph(LL_INPUT_GRAPH_PATH, &read_flags);
+		if(!strncmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_400_AP",19))	
 			// Reading a WebGraph using ParaGrapher library
-			graph = get_ll_400_webgraph(dataset_file_name, graph_type, &read_flags);
+			graph = get_ll_400_webgraph(LL_INPUT_GRAPH_PATH, LL_INPUT_GRAPH_TYPE, &read_flags);
 		assert(graph != NULL);
 
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
 
 	// Store graph in shm
-		if(STORE_GRAPH_IN_SHM & (read_flags & 1U<<31) == 0)
-			store_shm_ll_400_graph(pe, dataset_file_name, graph);
+		if(LL_STORE_INPUT_GRAPH_IN_SHM & (read_flags & 1U<<31) == 0)
+			store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, graph);
 		
 	// Exec info
 		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
 		assert(exec_info != NULL);
 
 	// Symmetrizing the graph
-		struct ll_400_graph* csr_graph = graph;
-		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset_file_name,csr_graph->vertices_count,csr_graph->edges_count);
+		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n", LL_INPUT_GRAPH_PATH, graph->vertices_count, graph->edges_count);
 		
-		struct ll_400_graph* sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
-		printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",dataset_file_name,sym_graph->vertices_count,sym_graph->edges_count);
-
-	// Releasing the input graph
-		if(read_flags & 1U<<31)
+		if(!LL_INPUT_GRAPH_IS_SYMMETRIC)
 		{
-			release_shm_ll_400_graph(csr_graph);
-			// delete_shm_graph_from(dataset_file_name);
+			struct ll_400_graph* sym_graph = csr2sym(pe, graph,  2U + 4U); // sort neighbour-lists and remove self-edges
+
+			// Releasing the input graph
+				if(read_flags & 1U<<31)
+					release_shm_ll_400_graph(graph);
+				else
+					release_numa_interleaved_ll_400_graph(graph);
+				graph = sym_graph;
+				sym_graph = NULL;
 		}
-		else
-			release_numa_interleaved_ll_400_graph(csr_graph);
-		csr_graph = NULL;
-		graph = sym_graph;
+		
+		printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",LL_INPUT_GRAPH_PATH, graph->vertices_count, graph->edges_count);
 
 	// CC
 		unsigned int flags = 1U;  // 1U print stats
@@ -109,10 +102,16 @@ int main(int argc, char** args)
 		cc_t = NULL;
 		cc_release(graph, cc_p);
 		cc_p = NULL;
-
-	
-		release_numa_interleaved_ll_400_graph(graph);
-		sym_graph = NULL;
+		
+		if(LL_INPUT_GRAPH_IS_SYMMETRIC)
+		{
+			if(read_flags & 1U<<31)
+				release_shm_ll_400_graph(graph);
+			else
+				release_numa_interleaved_ll_400_graph(graph);
+		}
+		else
+			release_numa_interleaved_ll_400_graph(graph);
 		graph = NULL;
 
 	printf("\n\n");

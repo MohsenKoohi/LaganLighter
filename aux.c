@@ -43,6 +43,38 @@
     _a < _b ? _a : _b;       \
 })
 
+char* LL_INPUT_GRAPH_PATH = "data/test_csr.txt";
+char* LL_INPUT_GRAPH_TYPE = "text";
+unsigned int LL_INPUT_GRAPH_IS_SYMMETRIC =  0;
+unsigned int LL_STORE_INPUT_GRAPH_IN_SHM = 0;
+
+void read_env_vars()
+{
+	char* temp = getenv("LL_INPUT_GRAPH_PATH");
+	if(temp != NULL)
+		LL_INPUT_GRAPH_PATH = temp;
+
+	temp = getenv("LL_INPUT_GRAPH_TYPE");
+	if(temp != NULL)
+		LL_INPUT_GRAPH_TYPE = temp;
+
+	temp = getenv("LL_INPUT_GRAPH_IS_SYMMETRIC");
+	if(temp != NULL && strcmp(temp, "1") == 0)
+		LL_INPUT_GRAPH_IS_SYMMETRIC = 1;
+
+	temp = getenv("LL_STORE_INPUT_GRAPH_IN_SHM");
+	if(temp != NULL && strcmp(temp, "1") == 0)
+		LL_STORE_INPUT_GRAPH_IN_SHM = 1;
+
+	printf("\n\033[2;32mEnv Vars:\n\033[0;37m");
+	printf("    LL_INPUT_GRAPH_PATH: %s\n", LL_INPUT_GRAPH_PATH);
+	printf("    LL_INPUT_GRAPH_TYPE: %s\n", LL_INPUT_GRAPH_TYPE);
+	printf("    LL_INPUT_GRAPH_IS_SYMMETRIC: %u\n", LL_INPUT_GRAPH_IS_SYMMETRIC);
+	printf("    LL_STORE_INPUT_GRAPH_IN_SHM: %u\n", LL_STORE_INPUT_GRAPH_IN_SHM);
+
+	return;
+}
+
 double get_standard_deviation(double* data, int count)
 {
 	double sum = 0;

@@ -1,8 +1,6 @@
 #ifndef __GRAPH_C
 #define __GRAPH_C
 
-#define STORE_GRAPH_IN_SHM 1
-
 #include <unistd.h>
 #include <errno.h>
 #include <math.h>
@@ -19,8 +17,9 @@
 #include <pthread.h>
 #include <libgen.h>
 
-#include "omp.c"
 #include "paragrapher.h"
+#include "omp.c"
+
 
 // 4 Bytes ID per vertex, without weights on edges or vertices
 struct ll_400_graph
@@ -558,7 +557,7 @@ void __ll_404_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 			This flag should be used for releasing the graph. If it is set, `release_shm_ll_404_graph()` should be called.
 			Otherwise, `release_numa_interleaved_ll_404_graph()` should be called.
 */
-struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
+struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type, unsigned int* flags)
 {	
 	// Opening graph
 		unsigned long t1=get_nano_time();

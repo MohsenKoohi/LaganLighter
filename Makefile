@@ -60,10 +60,8 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "#total_threads: "$(_total_threads)
 	@echo -e "#available_cores: "$(_available_cores)
 	@echo -e "#available_threads: "$(_available_threads) 
-	@echo -e "graph: "$(graph)
-	@echo -e "graph_type: "$(graph_type)
-	@echo -e "other args: "$(args)
-	PARAGRAPHER_LIB_FOLDER=paragrapher/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(graph) $(graph_type) $(args)
+	@echo -e "args: "$(args)
+	PARAGRAPHER_LIB_FOLDER=paragrapher/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(args)
 
 all: paragrapher Makefile
 	
