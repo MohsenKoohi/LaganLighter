@@ -1,6 +1,8 @@
 #ifndef __GRAPH_C
 #define __GRAPH_C
 
+#define STORE_GRAPH_IN_SHM 1
+
 #include <unistd.h>
 #include <errno.h>
 #include <math.h>
@@ -161,11 +163,13 @@ struct ll_400_graph* get_shm_ll_400_graph(char* file_name, unsigned long vertice
 
 /*
 	`flags`:
-		bit 0: Read from storage. Do not use the copy in /dev/shm (if it exists).
-		.
-		.
-		.
-		bit 31: Will be set by the function if the graph has been mapped from a copy in /dev/shm.
+		bit 0: 
+			Read from storage. Do not use the copy in /dev/shm (if it exists).
+		
+		bit 31: 
+			Will be set by the function if the graph has been mapped from a copy in /dev/shm. 
+			This flag should be used for releasing the graph. If it is set, `release_shm_ll_400_graph()` should be called.
+			Otherwise, `release_numa_interleaved_ll_400_graph()` should be called.
 */
 struct ll_400_graph* get_ll_400_txt_graph(char* file_name, unsigned int* flags)
 {
@@ -349,6 +353,16 @@ void __ll_400_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	return;
 }
 
+/*
+	`flags`:
+		bit 0: 
+			Read from storage. Do not use the copy in /dev/shm (if it exists).
+		
+		bit 31: 
+			Will be set by the function if the graph has been mapped from a copy in /dev/shm. 
+			This flag should be used for releasing the graph. If it is set, `release_shm_ll_400_graph()` should be called.
+			Otherwise, `release_numa_interleaved_ll_400_graph()` should be called.
+*/
 struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type, unsigned int* flags)
 {	
 	// Opening the graph
@@ -534,6 +548,16 @@ void __ll_404_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	return;
 }
 
+/*
+	`flags`:
+		bit 0: 
+			Read from storage. Do not use the copy in /dev/shm (if it exists).
+		
+		bit 31: 
+			Will be set by the function if the graph has been mapped from a copy in /dev/shm. 
+			This flag should be used for releasing the graph. If it is set, `release_shm_ll_404_graph()` should be called.
+			Otherwise, `release_numa_interleaved_ll_404_graph()` should be called.
+*/
 struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
 {	
 	// Opening graph
@@ -662,41 +686,96 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type)
 	return g;	
 }
 
-void store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
+int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
 {
 	assert(file_name != NULL && g != NULL);
 
+	int ret = -1;
 	char* shm_name = get_shm_graph_name(file_name);
 	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
 	
 	unsigned long* sg = create_shm(shm_name, graph_size);
-	numa_interleave_allocated_memory(sg, graph_size);
-
-	sg[0] = g->vertices_count;
-	sg[1] = g->edges_count;
-
-	#pragma omp parallel for 
-	for(unsigned int v=0; v <= g->vertices_count; v++)
-		sg[2 + v] = g->offsets_list[v];
-
-	unsigned int* sg_edges =(unsigned int*)(sg + 2 + g->vertices_count + 1);
-	#pragma omp parallel for 
-	for(unsigned long e=0; e < g->edges_count; e++)
-		sg_edges[e] = g->edges_list[e];
-
-	munmap(sg, graph_size);
-	sg = NULL;
-
+	if(sg != NULL)
 	{
-		int shm_fd = shm_open(shm_name, O_RDONLY, 0);
-		int ret = fchmod(shm_fd, S_IRUSR|S_IRGRP|S_IROTH);
-		assert(ret == 0);
-	
-		close(shm_fd);
-		shm_fd = -1;
+		numa_interleave_allocated_memory(sg, graph_size);
+
+		sg[0] = g->vertices_count;
+		sg[1] = g->edges_count;
+
+		#pragma omp parallel for 
+		for(unsigned int v=0; v <= g->vertices_count; v++)
+			sg[2 + v] = g->offsets_list[v];
+
+		unsigned int* sg_edges =(unsigned int*)(sg + 2 + g->vertices_count + 1);
+		#pragma omp parallel for 
+		for(unsigned long e=0; e < g->edges_count; e++)
+			sg_edges[e] = g->edges_list[e];
+
+		munmap(sg, graph_size);
+		sg = NULL;
+
+		{
+			int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+			int r0 = fchmod(shm_fd, S_IRUSR|S_IRGRP|S_IROTH);
+			assert(r0 == 0);
+		
+			close(shm_fd);
+			shm_fd = -1;
+		}
+
+		ret = 0;
 	}
 
-	return;
+	free(shm_name);
+	shm_name = NULL;
+
+	return ret;
+}
+
+int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
+{
+	assert(file_name != NULL && g != NULL);
+
+	int ret = -1;
+	char* shm_name = get_shm_graph_name(file_name);
+	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + 2UL * g->edges_count * sizeof(unsigned int);
+	
+	unsigned long* sg = create_shm(shm_name, graph_size);
+	if(sg != NULL)
+	{
+		numa_interleave_allocated_memory(sg, graph_size);
+
+		sg[0] = g->vertices_count;
+		sg[1] = g->edges_count;
+
+		#pragma omp parallel for 
+		for(unsigned int v=0; v <= g->vertices_count; v++)
+			sg[2 + v] = g->offsets_list[v];
+
+		unsigned int* sg_edges =(unsigned int*)(sg + 2 + g->vertices_count + 1);
+		#pragma omp parallel for 
+		for(unsigned long e=0; e < 2UL * g->edges_count; e++)
+			sg_edges[e] = g->edges_list[e];
+
+		munmap(sg, graph_size);
+		sg = NULL;
+
+		{
+			int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+			int r0 = fchmod(shm_fd, S_IRUSR|S_IRGRP|S_IROTH);
+			assert(r0 == 0);
+		
+			close(shm_fd);
+			shm_fd = -1;
+		}
+
+		ret = 0;
+	}
+
+	free(shm_name);
+	shm_name = NULL;
+
+	return ret;
 }
 
 void delete_shm_graph_from(char* file_name)
