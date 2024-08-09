@@ -18,7 +18,7 @@ int main(int argc, char** args)
 		if(!strcmp(LL_INPUT_GRAPH_TYPE,"text"))
 			// Reading the textual graph that does not require omp 
 			graph = get_ll_400_txt_graph(LL_INPUT_GRAPH_PATH, &read_flags);
-		if(!strncmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_400_AP",19))	
+		if(!strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_400_AP") || !strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_800_AP"))
 			// Reading a WebGraph using ParaGrapher library
 			graph = get_ll_400_webgraph(LL_INPUT_GRAPH_PATH, LL_INPUT_GRAPH_TYPE, &read_flags);
 		assert(graph != NULL);

@@ -88,13 +88,22 @@ char* get_shm_graph_name(char* file_name)
 
 	char* cfn = NULL;
 	if(access(file_name, F_OK) == 0 )
+		// for .txt graphs
 		cfn = file_name;
 	else
 	{
+		// for unweighted WebGraph graphs with .graph suffix
 		cfn = malloc(PATH_MAX);
 		assert(cfn != NULL);
 		sprintf(cfn, "%s.graph", file_name);
-		assert(access(cfn, F_OK) == 0);
+
+		if(access(cfn, F_OK) != 0)
+		{
+			// for weighted WebGraph graphs with .labels suffix
+			sprintf(cfn, "%s.labels", file_name);
+			int ra = access(cfn, F_OK);
+			assert(ra == 0);
+		}
 	}
 
 	char* abs_file_name = malloc(PATH_MAX);
@@ -520,8 +529,42 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type, unsigned i
 
 	*flags &= ~(1U<<31);
 
-
 	return g;	
+}
+
+struct ll_404_graph* get_shm_ll_404_graph(char* file_name, unsigned long vertices_count, unsigned long edges_count)
+{
+	char* shm_name = get_shm_graph_name(file_name);
+	printf("shm_name: %s\n", shm_name);
+	unsigned long graph_size = (2 + vertices_count + 1) * sizeof(unsigned long) + 2UL * edges_count * sizeof(unsigned int);
+
+	struct ll_404_graph* g = NULL;
+	int shm_fd = shm_open(shm_name, O_RDONLY, 0);
+	if(shm_fd > 0)
+	{
+		printf("Shared memory file exists.\n");
+		unsigned long* ul_graph = (unsigned long*)mmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, shm_fd, 0);
+		if(ul_graph == MAP_FAILED)
+		{
+			printf("Couldn't get graph -> mmap error : %d, %s\n", errno, strerror(errno) );
+			assert (ul_graph != MAP_FAILED);
+		}
+		close(shm_fd);
+		shm_fd = -1;
+		
+		g = malloc(sizeof(struct ll_404_graph));
+		assert(g != NULL);
+		g->vertices_count = ul_graph[0];
+		g->edges_count = ul_graph[1];
+		g->offsets_list = &ul_graph[2];
+		g->edges_list = (unsigned int*)(&ul_graph[ 2 + ul_graph[0] + 1 ]);
+	}
+
+	// Release mem
+		free(shm_name);
+		shm_name = NULL;
+
+	return g;
 }
 
 void __ll_404_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_block* eb, void* in_offsets, void* in_edges, void* buffer_id, void* in_args)
@@ -592,6 +635,21 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type, unsigned i
 			// op_args[0] = &val;
 			// ret = paragrapher_get_set_options(graph, PARAGRAPHER_REQUEST_SET_BUFFER_SIZE, op_args, 1);
 			// assert (ret == 0);
+		}
+
+	// Check if the graph exists in /dev/shm
+		if((*flags & 1U<<0) == 0)
+		{
+			struct ll_404_graph* g = get_shm_ll_404_graph(file_name, vertices_count, edges_count);
+			if(g != NULL)
+			{
+				assert(vertices_count == g->vertices_count);
+				assert(edges_count == g->edges_count);
+
+				print_ll_400_graph((struct ll_400_graph*)g);
+				*flags |= 1U<<31;
+				return g;
+			}
 		}
 
 	// Allocating memory
@@ -680,7 +738,13 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type, unsigned i
 		
 	printf("Reading completed in %'.3f (seconds)\n", (get_nano_time() - t1)/1e9); 
 
-	print_ll_400_graph((struct ll_400_graph*)g);
+	// Printing the first vals in the read graph
+		print_ll_400_graph((struct ll_400_graph*)g);
+
+	// Flush the OS cache
+		flush_os_cache();
+
+	*flags &= ~(1U<<31);
 
 	return g;	
 }
@@ -731,7 +795,7 @@ int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_gr
 	return ret;
 }
 
-int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
+int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_404_graph* g)
 {
 	assert(file_name != NULL && g != NULL);
 

@@ -1063,4 +1063,37 @@ struct ll_404_graph* copy_ll_404_graph(struct par_env* pe, struct ll_404_graph* 
 	return out;
 }
 
+/*
+	This function removes weights of a ll_404 graph
+*/
+struct ll_400_graph* copy_ll_404_to_400_graph(struct par_env* pe, struct ll_404_graph* in, struct ll_400_graph* out)
+{
+	if(out == NULL)
+	{
+		out = calloc(sizeof(struct ll_400_graph),1);
+		assert(out != NULL);
+		out->vertices_count = in->vertices_count;
+		out->edges_count = in->edges_count;
+		out->offsets_list = numa_alloc_interleaved(sizeof(unsigned long)*(1 + in->vertices_count));
+		assert(out->offsets_list != NULL);
+		out->edges_list = numa_alloc_interleaved(sizeof(unsigned int) * in->edges_count);
+		assert(out->edges_list != NULL);
+	}
+	else
+	{
+		assert(out->vertices_count == in->vertices_count && out->offsets_list != NULL);
+		assert(out->edges_count == in->edges_count && out->edges_list != NULL);
+	}
+
+	#pragma omp parallel for 
+	for(unsigned int v=0; v <= out->vertices_count; v++)
+		out->offsets_list[v] = in->offsets_list[v];
+
+	#pragma omp parallel for 
+	for(unsigned long e = 0; e < out->edges_count; e++)
+		out->edges_list[e] = in->edges_list[2 * e];
+
+	return out;
+}
+
 #endif

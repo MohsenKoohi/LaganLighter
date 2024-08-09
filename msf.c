@@ -870,7 +870,7 @@ inline struct sdw_edge* edge_storage_get_one(struct edge_storage* es)
 	Arguments:
 		
 		g:
-			The weighted graph is received as `g`, and t is necessary to not have any self or repeated edges in the input graph `g`.
+			The weighted graph is received as `g`, and t is necessary to not have any self edges (loops) or repeated edges in the input graph `g`.
 
 		flags: 
 			bit-0: print details
