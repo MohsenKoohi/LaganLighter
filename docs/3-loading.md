@@ -60,7 +60,7 @@ load the graph in the following steps:
   memory is used. To prevent this effect, the `flushcache.sh` script is called at the end of graph loading.
   If the user has sudo access, a script can be added for this purpose (Please refer to the comments of `flushcache.sh`).
 
-## Where to Find Public Graphs?
+## Where Are The Public Graphs Found?
 
 Please refer to [https://blogs.qub.ac.uk/DIPSA/graphs-list-2024](https://blogs.qub.ac.uk/DIPSA/graphs-list-2024).
 
