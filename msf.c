@@ -870,7 +870,8 @@ inline struct sdw_edge* edge_storage_get_one(struct edge_storage* es)
 	Arguments:
 		
 		g:
-			The weighted graph is received as `g`, and t is necessary to not have any self edges (loops) or repeated edges in the input graph `g`.
+			The weighted graph is received as `g`, and t is necessary to not have repeated edges in the input graph `g`.
+			Self-edges (loops) of vertices are ignored.
 
 		flags: 
 			bit-0: print details
@@ -1135,6 +1136,11 @@ struct msf* msf_mastiff(struct par_env* pe, struct ll_404_graph* g, unsigned lon
 							for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v + 1]; e++)
 							{
 								unsigned int dest = g->edges_list[2 * e];
+								
+								// self-edge
+								if(dest == v)
+									continue;
+
 								unsigned int weight = g->edges_list[2 * e + 1];
 
 								// Prevent the same-weight cycles to be added to the forest when edges do not have unique weights:
@@ -1179,6 +1185,10 @@ struct msf* msf_mastiff(struct par_env* pe, struct ll_404_graph* g, unsigned lon
 							for(; e < g->offsets_list[v + 1]; e++)
 							{
 								unsigned int dest = g->edges_list[2 * e];
+								
+								// A self-edge
+								if(dest == v)
+									continue;
 								
 								// no more edge
 								// if(dest == -1U)

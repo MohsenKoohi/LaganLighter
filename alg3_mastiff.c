@@ -104,12 +104,6 @@ int main(int argc, char** args)
 		}
 
 	// Running MSF
-		#pragma omp parallel for
-		for(unsigned int v = 0 ; v < wgraph->vertices_count; v++)
-		for(unsigned long e = wgraph->offsets_list[v] ; e < wgraph->offsets_list[v + 1];e++)
-			if(wgraph->edges_list[2 * e] == v)
-				printf("%lu\n", e);
-
 		// Mastiff
 		struct msf* res_mastiff = NULL;
 		
