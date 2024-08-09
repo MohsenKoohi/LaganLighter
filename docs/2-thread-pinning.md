@@ -1,4 +1,4 @@
-#  LaganLighter Docs, Thread Pinning (Setting Affinity)
+#  LaganLighter Docs: Thread Pinning (Setting Affinity)
 
 In applications such as graph processing, it is important how threads are pinned on CPU cores as 
 the threads that share resources (such as memory and cache) can accelerate the performance by 

@@ -1,4 +1,4 @@
-#  LaganLighter Docs, General Info
+#  LaganLighter Docs: General Info
 
 ## Cloning
 

@@ -27,28 +27,27 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 ### Compiling and Executing Code
  - Set the path to `gcc` compiler folder in Line 6 of the `Makefile`, if you do not have it in `PATH`.
  - Please modify Line 14, if the required libraries (`libnuma` and `libpapi`) are not in the library path,`LD_LIBRARY_PATH`.
- - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. To run it for other graphs, add the path to your graph as the value to variable `graph` to the `make` (e.g. `make alg1_sapco_sort graph="path/to/graph" graph_type=TYPE`), where `TYPE` can be `text`, or one of the types supported by [ParaGrapher](https://blogs.qub.ac.uk/DIPSA/ParaGrapher), e.g.: **`PARAGRAPHER_CSX_WG_400_AP`**, **`PARAGRAPHER_CSX_WG_404_AP`**, or **`PARAGRAPHER_CSX_WG_800_AP`**. 
+ - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. 
  - To disable hyper-threading, please use `no_ht=1` with make.
  - To enable debugging (-g of gcc), use `debug=1`.
+ - For further options, please refer to [docs/3-loading.md](docs/3-loading.md).
 
-### Graph Types
-LaganLighter supports  the following graph formats:
+### How Does LaganLighter Work?
+Please refer to [LaganLighter documentation](docs/readme.md)
 
- - CSR/CSC graph in textual format, for testing. This format has 4 lines: 
- 	1. The number of vertices (|V|), 
- 	2. The number of edges (|E|), 
- 	3. |V| space-separated numbers showing offsets of the vertices, and 
- 	4. |E| space-separated numbers indicating edges.
- 
- - Compressed CSR/CSC graphs in WebGraph format are now supported by integrating [ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) as a submodule.
-
-### How Does It Work?
-[LaganLighter documentation](docs/readme.md)
+### Supported Graph Types & Loading Graphs
+Please refer to [docs/3-loading.md](docs/3-loading.md).
  
 ### Bugs & Support
-If you receive wrong results or you are suspicious about parts of the code, please [contact us](https://orcid.org/0000-0002-7465-8003).
+If you receive wrong results or you are suspicious about parts of the code, 
+please [contact us](https://orcid.org/0000-0002-7465-8003).
 
 ### License
-Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. You must not use this Software except in compliance with the terms of the License. Unless required by applicable law or agreed upon in writing, this Software is distributed on an "as is" basis, without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose, neither express nor implied. For details see terms of the License (see attached file: LICENSE). 
+Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. 
+You must not use this Software except in compliance with the terms of the License. 
+Unless required by applicable law or agreed upon in writing, this Software is distributed 
+on an "as is" basis, without any warranty; without even the implied warranty of 
+merchantability or fitness for a particular purpose, neither express nor implied. 
+For details see terms of the License (see attached file: LICENSE). 
 
 #### Copyright 2022 The Queen's University of Belfast, Northern Ireland, UK
