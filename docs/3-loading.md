@@ -74,5 +74,6 @@ You may find WebGraphs in:
   - [https://blogs.qub.ac.uk/DIPSA/MS-BioGraphs](https://blogs.qub.ac.uk/dipsa/ms-biographs/) \[DOI: [10.21227/gmd9-1534](https://doi.org/10.21227/gmd9-1534)\]
 
 
+## How To Run An Algorithm For a Numebr of Graphs?
 
 --------------------

@@ -36,6 +36,11 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 Please refer to [LaganLighter documentation](docs/readme.md)
 
 ### Supported Graph Types & Loading Graphs
+LaganLighter supports reading graphs in **text** format and in compressed **WebGraph** format, using
+[ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) library, 
+particularly types **`PARAGRAPHER_CSX_WG_400_AP`**, 
+**`PARAGRAPHER_CSX_WG_404_AP`**, or **`PARAGRAPHER_CSX_WG_800_AP`**.
+
 Please refer to [docs/3-loading.md](docs/3-loading.md).
  
 ### Bugs & Support
