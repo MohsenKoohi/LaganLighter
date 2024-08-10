@@ -56,9 +56,10 @@ load the graph in the following steps:
   `release_numa_interleaved_ll_400_graph()` or `release_numa_interleaved_ll_404_graph()`.
 
   3. When the graph is loaded/decompressed from secondary storage, the OS caches some contents of the graph
-  in memory. This cached data may impact the performance of memory accesses especially when a large percentage of the
-  memory is used. To prevent this effect, the `flushcache.sh` script is called at the end of graph loading.
-  If the user has sudo access, a script can be added for this purpose (Please refer to the comments of `flushcache.sh`).
+  in memory. This cached data by OS may impact the performance of memory accesses especially when a large percentage of the
+  memory is used. To prevent this, the `flushcache.sh` script is called at the end of graph loading.
+  If the user has sudo access, a script can be added for this purpose (Please refer 
+  to the comments on the first lines of `flushcache.sh`).
 
 ## Where Are The Public Graphs Found?
 
