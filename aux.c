@@ -45,8 +45,10 @@
 
 char* LL_INPUT_GRAPH_PATH = "data/test_csr.txt";
 char* LL_INPUT_GRAPH_TYPE = "text";
-unsigned int LL_INPUT_GRAPH_IS_SYMMETRIC =  0;
+unsigned int LL_INPUT_GRAPH_BATCH_ORDER = 0;
+unsigned int LL_INPUT_GRAPH_IS_SYMMETRIC = 0;
 unsigned int LL_STORE_INPUT_GRAPH_IN_SHM = 0;
+char* LL_OUTPUT_REPORT_PATH = NULL;
 
 void read_env_vars()
 {
@@ -58,6 +60,10 @@ void read_env_vars()
 	if(temp != NULL)
 		LL_INPUT_GRAPH_TYPE = temp;
 
+	temp = getenv("LL_INPUT_GRAPH_BATCH_ORDER");
+	if(temp != NULL)
+		LL_INPUT_GRAPH_BATCH_ORDER = atoi(temp);
+
 	temp = getenv("LL_INPUT_GRAPH_IS_SYMMETRIC");
 	if(temp != NULL && strcmp(temp, "1") == 0)
 		LL_INPUT_GRAPH_IS_SYMMETRIC = 1;
@@ -66,12 +72,18 @@ void read_env_vars()
 	if(temp != NULL && strcmp(temp, "1") == 0)
 		LL_STORE_INPUT_GRAPH_IN_SHM = 1;
 
+	temp = getenv("LL_OUTPUT_REPORT_PATH");
+	if(temp != NULL && strlen(temp) > 0)
+		LL_OUTPUT_REPORT_PATH = temp;
+
 	printf("\n\033[2;32mEnv Vars:\n\033[0;37m");
-	printf("    LL_INPUT_GRAPH_PATH: %s\n", LL_INPUT_GRAPH_PATH);
-	printf("    LL_INPUT_GRAPH_TYPE: %s\n", LL_INPUT_GRAPH_TYPE);
+	printf("    LL_INPUT_GRAPH_PATH:         %s\n", LL_INPUT_GRAPH_PATH);
+	printf("    LL_INPUT_GRAPH_TYPE:         %s\n", LL_INPUT_GRAPH_TYPE);
+	printf("    LL_INPUT_GRAPH_BATCH_ORDER:  %u\n", LL_INPUT_GRAPH_BATCH_ORDER);
 	printf("    LL_INPUT_GRAPH_IS_SYMMETRIC: %u\n", LL_INPUT_GRAPH_IS_SYMMETRIC);
 	printf("    LL_STORE_INPUT_GRAPH_IN_SHM: %u\n", LL_STORE_INPUT_GRAPH_IN_SHM);
-
+	printf("    LL_OUTPUT_REPORT_PATH:       %s\n", LL_OUTPUT_REPORT_PATH);
+	
 	return;
 }
 

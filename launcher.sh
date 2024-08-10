@@ -7,9 +7,10 @@
 	echo "Arguments to be passed to this script:"
 	echo "  alg=algorithm-filename (with or without .c)"
 	echo "  df=path/to/datasets/folder (default ./data)"
-	echo "  args=\"additional arguemnts to be passed to the program and separated by space and put in double quotes\" (default empty)"
+	echo "  make-flags=\"flags (e.g. no_ht=1) to be passed to the \`make\`, separated by space, and put in double quotes\" (default empty)"
+	echo "  program-args=\"arguemnts to be passed to the \`program\` by \`make\`, separated by space, and put in double quotes\" (default empty)"
+	echo "  sa=n (stop after n-th dataset, default: -1)"
 	echo "  -iw (include weighted graphs, default: 0)"
-	echo "  -s1 (stop after first dataset, default: 0)"
 	echo "  -shm-store (store graphs in shm, default: 0)"
 	echo "  -shm-delete (delete shm graphs at the end, default: 0)"
 	echo
@@ -24,15 +25,16 @@
 		ALG=`echo $ALG | cut -f1 -d.`;
 	fi
 	if [ ! -e "$ALG.c" ]; then 
-		echo "File \"$ALG.c\" does not exist.";
+		echo "  \033[0;31mError:\033[0;37m File \"$ALG.c\" does not exist.";
 		exit 1;
 	fi
-	echo "Algorithm: $ALG"
+	echo "  Algorithm: $ALG"
 
 	DF="./data"
-	ARGS=""
+	MAKE_FLAGS=""
+	PROGRAM_ARGS=""
 	IW=0
-	S1=0
+	SA="-1"
 	SHM_STORE=0
 	SHM_DELETE=0
 
@@ -41,16 +43,20 @@
 			DF=`echo "${!i}" | cut -f2 -d=`
 		fi
 
-		if [[ "${!i}" == *"args"* ]]; then 
-			ARGS=`echo "${!i}" | cut -f2 -d=`
+		if [[ "${!i}" == *"make-flags"* ]]; then 
+			MAKE_FLAGS=`echo "${!i}" | cut -f2- -d=`
+		fi
+
+		if [[ "${!i}" == *"program-args"* ]]; then 
+			PROGRAM_ARGS=`echo "${!i}" | cut -f2- -d=`
+		fi
+
+		if [[ "${!i}" == *"sa="* ]]; then 
+			SA=`echo "${!i}" | cut -f2 -d=`
 		fi
 
 		if [ "${!i}" == "-iw" ]; then
 			IW=1
-		fi
-
-		if [ "${!i}" == "-s1" ]; then
-			S1=1
 		fi
 
 		if [ "${!i}" == "-shm-store" ]; then
@@ -64,16 +70,17 @@
 
 	if [ ! -e $DF ]; 
 	then
-		echo "Datasets folder \"$DF\" does not exist.";
+		echo "  \033[0;31mError:\033[0;37m Datasets folder \"$DF\" does not exist.";
 		exit 2;
 	fi;
 	
-	echo "Additional args (arg): \"$ARGS\""
-	echo "Datasets folder (df): $DF" 
-	echo "Include weighted graphs (-iw): $IW"
-	echo "Stop after first dataset (-s1): $S1"
-	echo "Store graph in shm (-shm-store): $SHM_STORE"
-	echo "Delete shm graphs at end (-shm-delete): $SHM_DELETE"
+	echo "  Make flags (make-flags): \"$MAKE_FLAGS\""
+	echo "  Program args (program-args): \"$PROGRAM_ARGS\""
+	echo "  Datasets folder (df): $DF" 
+	echo "  Stop after n-th dataset (sa): $SA"
+	echo "  Include weighted graphs (-iw): $IW"
+	echo "  Store graph in shm (-shm-store): $SHM_STORE"
+	echo "  Delete shm graphs at end (-shm-delete): $SHM_DELETE"
 	echo 
 
 # Identifying datasets
@@ -111,7 +118,7 @@
 		fi
 
 		if [ $edges_count == "0" ]; then
-			echo "Dataset \"$DF/$ds\" did not recognize."
+			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize."
 			continue;
 		fi
 
@@ -132,14 +139,55 @@
 	while IFS= read -r line; do
 		ds=`echo $line|cut -f1 -d' '`
 		ec=`echo $line|cut -f2 -d' '`
-		echo "$ds, |E|: $ec" 
+		echo "  $ds, |E|: $ec" 
 		datasets="$datasets $ds"
 	done <<< "$sorted_datasets"
 
 # Processing graphs
 	echo -e "\n\033[0;34mProcessing Datasets\033[0;37m"
+	log_folder="logs/$ALG-`date +"%Y%m%d-%H%M%S"`"
+	mkdir -p $log_folder
+	echo "  Log Folder: "$log_folder
+	report_path=$log_folder/report.txt
+	touch $report_path
+	echo "  Report file: "$report_path
+	echo
+
+	c=0;
 	for ds in $datasets; do
-		echo $ds;
+		
+		sf=`echo $ds | rev | cut -f1 -d. | rev`
+		input_graph=""
+		input_type=""
+
+		if [ $sf == "txt" ]; then
+			input_graph="$DF/$ds"
+			input_type="text"
+		fi
+		if [ $sf == "graph" ]; then
+			input_graph="$DF/"`echo $ds | sed 's/\(.*\)\.graph/\1/'`
+			input_type="PARAGRAPHER_CSX_WG_800_AP"
+		fi
+		if [ $sf == "labels" ]; then
+			input_graph="$DF/"`echo $ds | sed 's/\(.*\)\.labels/\1/'`
+			input_type="PARAGRAPHER_CSX_WG_404_AP"
+		fi
+
+		ds_log_file="$log_folder/$c-"`echo $ds | rev | cut -f2- -d. | rev`".txt"
+
+		cmd="LL_INPUT_GRAPH_PATH=$input_graph LL_INPUT_GRAPH_TYPE=$input_type LL_INPUT_GRAPH_BATCH_ORDER=$c  LL_INPUT_GRAPH_IS_SYMMETRIC=$is_sym"
+		cmd="$cmd LL_STORE_INPUT_GRAPH_IN_SHM=$SHM_STORE LL_OUTPUT_REPORT_PATH=$report_path"
+		
+		echo "  $c, $input_graph:"
+		echo "    $cmd make $ALG $MAKE_FLAGS args=\"$PROGRAM_ARGS\" 1>$ds_log_file 2>&1" 
+
+		env $cmd make $ALG $MAKE_FLAGS args="$PROGRAM_ARGS" 1>$ds_log_file 2>&1
+
+		echo 
+		c=`echo "$c+1"|bc`
+		if [ $SA == $c ]; then
+			break;
+		fi
 	done
 
 # Post processing actions 
