@@ -149,11 +149,20 @@
 
 # Processing graphs
 	echo -e "\n\033[0;34mProcessing Datasets\033[0;37m"
-	log_folder="logs/$ALG-`date +"%Y%m%d-%H%M%S"`"
+	hostname=`hostname|cut -f1 -d.`
+	c=0;
+	while [ 1 == 1 ]; do
+		log_folder="logs/$ALG-$hostname-$c"
+		if [ ! -d $log_folder ]; then
+			break;
+		fi;
+		c=`echo "$c+1"|bc`
+	done
+
 	mkdir -p $log_folder
 	echo "  Log Folder: "$log_folder
 	report_path=$log_folder/report.txt
-	touch $report_path
+	echo -e "Machine: $hostname\nTime: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" > $report_path
 	echo "  Report file: "$report_path
 	echo
 
@@ -206,5 +215,14 @@
 	if [ $SHM_DELETE == 1 ]; then 
 		make clean_shm_graphs
 	fi
+
+# Printing the report
+	echo -e "\n\033[0;34mResults\033[0;37m"
+	echo 
+	echo "  From $report_path: "
+	echo 
+	while IFS= read -r line; do
+		echo "  $line" 
+	done <<< `cat $report_path`
 
 echo 

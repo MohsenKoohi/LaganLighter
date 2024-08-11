@@ -427,5 +427,26 @@ void* create_shm(char* shm_file_name, unsigned long length)
 	return mem;
 }
 
+void ul2s(unsigned long in, char* out)
+{
+	assert(out != NULL);
+
+	if(in > 1e18)
+		sprintf(out, "%'.1fE", in/1e18);
+	else if(in > 1e15)
+		sprintf(out, "%.1fP", in/1e15);
+	else if(in > 1e12)
+		sprintf(out, "%.1fT", in/1e12);
+	else if(in > 1e9)
+		sprintf(out, "%.1fG", in/1e9);
+	else if(in > 1e6)
+		sprintf(out, "%.1fM", in/1e6);
+	else if(in > 1e3)
+		sprintf(out, "%.1fk", in/1e3);
+	else
+		sprintf(out, "%lu", in);
+
+	return;
+}
 
 #endif

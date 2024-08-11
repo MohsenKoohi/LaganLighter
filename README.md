@@ -47,7 +47,7 @@ Please refer to [Graph Loading Documentation](docs/3-loading.md).
 
 ### Processing Multiple Graphs 
 
-Please refer to [Launcher Script Documentaion](4-launcher.md).
+Please refer to [Launcher Script Documentaion](docs/4-launcher.md).
  
 ### Bugs & Support
 

@@ -60,6 +60,37 @@ int main(int argc, char** args)
 		
 		printf("\n\t\t\033[1;34mArray is correct.\033[0;37m\n");
 
+	// Writing to the report
+		if(LL_OUTPUT_REPORT_PATH != NULL)
+		{
+			FILE* out = fopen(LL_OUTPUT_REPORT_PATH, "a");
+			assert(out != NULL);
+
+			if(LL_INPUT_GRAPH_BATCH_ORDER == 0)
+				fprintf(out, "%-20s; %-10s; %-10s; %-13s;\n", "Dataset", "|V|", "|E|", "Time (s)");
+
+			char vs [32];
+			char es [32];
+			ul2s(csc_graph->vertices_count, vs);
+			ul2s(csc_graph->edges_count, es);
+			
+			char* name = strrchr(LL_INPUT_GRAPH_PATH, '/');
+			if(name == NULL)
+				name = LL_INPUT_GRAPH_PATH;
+			else
+				name++;
+			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
+				name = strndup(name, (unsigned int) (strrchr(name, '.') - name));
+			
+			fprintf(out, 
+				"%-20s; %'10s; %'10s; %'13.3f;\n", 
+				name, vs, es, exec_info[0] / 1e9
+			);
+
+			fclose(out);
+			out = NULL;
+		}
+
 	// Releasing memory
 		numa_free(RA_n2o, sizeof(unsigned int) * csc_graph->vertices_count);
 		RA_n2o = NULL;
