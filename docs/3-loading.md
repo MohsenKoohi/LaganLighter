@@ -15,28 +15,35 @@ LaganLighter supports the following graph formats:
 
 ## Running Algorithms
 
-4 environment variables are passed to `make` to specify the input graph:
+Environment variables may be passed to `make` to specify the input graph:
 
-  1. `LL_INPUT_GRAPH_PATH`: path to the graph. The default value is `data/test_csr.txt`
+  - `LL_INPUT_GRAPH_PATH`: path to the graph. The default value is `data/test_csr.txt`
 
-  2. `LL_INPUT_GRAPH_TYPE`: type of the graph which can be *`text`*, *`PARAGRAPHER_CSX_WG_400_AP`*, 
-  *`PARAGRAPHER_CSX_WG_404_AP`*, or *`PARAGRAPHER_CSX_WG_800_AP`*. The default value is `text`.
+  - `LL_INPUT_GRAPH_TYPE`: type of the graph which can be
+    - *`text`*, 
+    - *`PARAGRAPHER_CSX_WG_400_AP`* (graphs with 4 Bytes vertex IDs and no weights), 
+    - *`PARAGRAPHER_CSX_WG_404_AP`* (graphs with 4 Bytes vertex IDs and 4 Bytes `uint` edge weights), or 
+    - *`PARAGRAPHER_CSX_WG_800_AP`* (graphs with 8 Bytes vertex IDs and no weights). 
+    
+  The default value is `text`.
+  Please refer to [ParaGrapher Documentation](https://github.com/MohsenKoohi/ParaGrapher/wiki/API-Documentation)
+  for more details.
 
-  3. `LL_INPUT_GRAPH_IS_SYMMETRIC`: with a value of `0` or `1`, specifies if the 
+  - `LL_INPUT_GRAPH_IS_SYMMETRIC`: with a value of `0` or `1`, specifies if the 
   input graph is symmetric. The default value is 0.
   Using this variable for symmetric graphs will help algorithms the dataset to be passed directly (and without symmetrization) 
   to algorithms that require a symmetric graph input.
 
-  4. `LL_INPUT_GRAPH_BATCH_ORDER`: is used by `launcher.sh` script to inform the program the batch order of current  
+  - `LL_INPUT_GRAPH_BATCH_ORDER`: is used by `launcher.sh` script to inform the program the batch order of current  
   dataset. Default is 0.
 
-  5. `LL_STORE_INPUT_GRAPH_IN_SHM`: with a value of `0` or `1`, specifies if it is required 
+  - `LL_STORE_INPUT_GRAPH_IN_SHM`: with a value of `0` or `1`, specifies if it is required 
   to store a copy of the graph as a shared memory object (i.e. in `/dev/shm`). 
   The default value is 0. It is useful when the size of input graph(s) is large and some 
   experiments are repeated multiple times on the graphs. In this case and by storing the graphs as shared memory objects,
   it is not required to load them from the storage.
 
-  6. `LL_OUTPUT_REPORT_PATH`: specifies the path to the report file, if it is required. It is used by `launcher.sh` script
+  - `LL_OUTPUT_REPORT_PATH`: specifies the path to the report file, if it is required. It is used by `launcher.sh` script
   to aggregate results for all processed datasets. Default value is `NULL`.
 
 To run a single algorithm, it is enough to call `make alg...`, e.g., `make alg1_sapco_sort`. 
@@ -52,7 +59,7 @@ to enable debugging (-g of gcc), respectively.
 
 For *textual* graphs (formatted above), it is required to call `get_ll_400_txt_graph()`. 
 To load the graphs in *WebGraph* format (using ParaGrapher), functions `get_ll_400_webgraph()`
-and `get_ll_404_webgraph()` should be called. These 3 functions have been defined in `graph.c` and
+and `get_ll_404_webgraph()` should be called. These 3 functions have been defined in [`graph.c`](../graph.c) and
 load the graph in the following steps:
 
   1. Checking if the graph has been stored as a shared memory object. In that case the graph is returned to the user
@@ -83,8 +90,8 @@ You may find WebGraphs in:
 
 Please also refer to [https://blogs.qub.ac.uk/DIPSA/graphs-list-2024](https://blogs.qub.ac.uk/DIPSA/graphs-list-2024).
 
-## Executing an Algorithm For a Numebr of Graphs
+## Executing an Algorithm For Multiple Graphs
 
-Please refer to [Launcher Doc](4-launcher.md).
+Please refer to the [Launcher Doc](4-launcher.md).
 
 --------------------
