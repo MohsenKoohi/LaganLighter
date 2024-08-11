@@ -19,17 +19,25 @@ LaganLighter supports the following graph formats:
 
   1. `LL_INPUT_GRAPH_PATH`: path to the graph. The default value is `data/test_csr.txt`
 
-  2. `LL_INPUT_GRAPH_TYPE`: type of the graph which can be **`text`**, **`PARAGRAPHER_CSX_WG_400_AP`**, 
-  **`PARAGRAPHER_CSX_WG_404_AP`**, or **`PARAGRAPHER_CSX_WG_800_AP`**. The default value is `text`.
+  2. `LL_INPUT_GRAPH_TYPE`: type of the graph which can be *`text`*, *`PARAGRAPHER_CSX_WG_400_AP`*, 
+  *`PARAGRAPHER_CSX_WG_404_AP`*, or *`PARAGRAPHER_CSX_WG_800_AP`*. The default value is `text`.
 
   3. `LL_INPUT_GRAPH_IS_SYMMETRIC`: with a value of `0` or `1`, specifies if the 
   input graph is symmetric. The default value is 0.
+  Using this variable for symmetric graphs will help algorithms the dataset to be passed directly (and without symmetrization) 
+  to algorithms that require a symmetric graph input.
 
-  4. `LL_STORE_INPUT_GRAPH_IN_SHM`: with a value of `0` or `1`, specifies if it is required 
+  4. `LL_INPUT_GRAPH_BATCH_ORDER`: is used by `launcher.sh` script to inform the program the batch order of current  
+  dataset. Default is 0.
+
+  5. `LL_STORE_INPUT_GRAPH_IN_SHM`: with a value of `0` or `1`, specifies if it is required 
   to store a copy of the graph as a shared memory object (i.e. in `/dev/shm`). 
   The default value is 0. It is useful when the size of input graph(s) is large and some 
   experiments are repeated multiple times on the graphs. In this case and by storing the graphs as shared memory objects,
   it is not required to load them from the storage.
+
+  6. `LL_OUTPUT_REPORT_PATH`: specifies the path to the report file, if it is required. It is used by `launcher.sh` script
+  to aggregate results for all processed datasets. Default value is `NULL`.
 
 To run a single algorithm, it is enough to call `make alg...`, e.g., `make alg1_sapco_sort`. 
 It runs the algorithm for the default options (stated in the above). To run the algorithm for a particular graph,
@@ -61,7 +69,7 @@ load the graph in the following steps:
   If the user has sudo access, a script can be added for this purpose (Please refer 
   to the comments on the first lines of `flushcache.sh`).
 
-## Where Are The Public Graphs Found?
+## Downloading Public Graphs
 
 Please refer to [https://blogs.qub.ac.uk/DIPSA/graphs-list-2024](https://blogs.qub.ac.uk/DIPSA/graphs-list-2024).
 
@@ -75,6 +83,8 @@ You may find WebGraphs in:
   - [https://blogs.qub.ac.uk/DIPSA/MS-BioGraphs](https://blogs.qub.ac.uk/dipsa/ms-biographs/) \[DOI: [10.21227/gmd9-1534](https://doi.org/10.21227/gmd9-1534)\]
 
 
-## How To Run An Algorithm For a Numebr of Graphs?
+## Executing an Algorithm For a Numebr of Graphs
+
+Please refer to [Launcher Doc](4-launcher.md).
 
 --------------------

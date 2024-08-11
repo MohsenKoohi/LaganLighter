@@ -26,14 +26,16 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 
 ### Compiling and Executing Code
  - Set the path to `gcc` compiler folder in Line 6 of the `Makefile`, if you do not have it in `PATH`.
- - Please modify Line 14, if the required libraries (`libnuma` and `libpapi`) are not in the library path,`LD_LIBRARY_PATH`.
+ - Line 14 of the `Makefile` may need to be modified, if the required libraries (`libnuma` and `libpapi`) 
+ are not in the library path,`LD_LIBRARY_PATH`.
  - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. 
+ - For identifying input graph and other options, please refer to [LaganLighter Documents, Loading Graphs](docs/3-loading.md).
  - To disable hyper-threading, please use `no_ht=1` with make.
  - To enable debugging (-g of gcc), use `debug=1`.
- - For further options, please refer to [docs/3-loading.md](docs/3-loading.md).
 
 ### How Does LaganLighter Work?
-Please refer to [LaganLighter documentation](docs/readme.md)
+
+Please refer to [LaganLighter Documentation](docs/readme.md)
 
 ### Supported Graph Types & Loading Graphs
 LaganLighter supports reading graphs in *text* format and in compressed *[WebGraph](https://webgraph.di.unimi.it/)* format, using
@@ -41,7 +43,11 @@ LaganLighter supports reading graphs in *text* format and in compressed *[WebGra
 particularly types **`PARAGRAPHER_CSX_WG_400_AP`**, 
 **`PARAGRAPHER_CSX_WG_404_AP`**, and **`PARAGRAPHER_CSX_WG_800_AP`**.
 
-Please refer to [docs/3-loading.md](docs/3-loading.md).
+Please refer to [Graph Loading Documentation](docs/3-loading.md).
+
+### Processing Multiple Graphs 
+
+Please refer to [Launcher Script Documentaion](4-launcher.md).
  
 ### Bugs & Support
 If you receive wrong results or you are suspicious about parts of the code, 
@@ -55,4 +61,4 @@ on an "as is" basis, without any warranty; without even the implied warranty of
 merchantability or fitness for a particular purpose, neither express nor implied. 
 For details see terms of the License (see attached file: LICENSE). 
 
-#### Copyright 2022 The Queen's University of Belfast, Northern Ireland, UK
+#### Copyright 2019-2022, Queen's University of Belfast, Northern Ireland, UK

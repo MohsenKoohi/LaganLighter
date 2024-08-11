@@ -117,6 +117,10 @@
 			edges_count=0;
 		fi
 
+		if [ ! -n "$edges_count" ]; then
+			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize."
+			continue;
+		fi
 		if [ $edges_count == "0" ]; then
 			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize."
 			continue;
@@ -171,6 +175,14 @@
 		if [ $sf == "labels" ]; then
 			input_graph="$DF/"`echo $ds | sed 's/\(.*\)\.labels/\1/'`
 			input_type="PARAGRAPHER_CSX_WG_404_AP"
+		fi
+
+		is_sym=0
+		if [[ $ds == "sym"* ]]; then
+			is_sym=1
+		fi
+		if [ `echo $ds | grep -ocP "MS[\d]+"` == "1"  ]; then
+			is_sym=1
 		fi
 
 		ds_log_file="$log_folder/$c-"`echo $ds | rev | cut -f2- -d. | rev`".txt"
