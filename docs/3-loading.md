@@ -63,15 +63,14 @@ load the graph in the following steps:
   a NUMA-interleaved memory is allocated for the graph. This graph should be released by calling
   `release_numa_interleaved_ll_400_graph()` or `release_numa_interleaved_ll_404_graph()`.
 
-  3. When the graph is loaded/decompressed from secondary storage, the OS caches some contents of the graph
-  in memory. This cached data by OS may impact the performance of memory accesses especially when a large percentage of the
-  memory is used. To prevent this, the `flushcache.sh` script is called at the end of graph loading.
-  If the user has sudo access, a script can be added for this purpose (Please refer 
-  to the comments on the first lines of `flushcache.sh`).
+  3. When the graph is loaded/decompressed from the secondary storage, the OS caches some contents of the graph
+  in memory. This cached data by OS may impact the performance of algorithms especially when a large percentage of the
+  memory is used. To prevent this, by the end of graph loading, the `flush_os_cache()` functions is used to run th e
+  [`flushcache.sh`](../flushcache.sh) script.
+  If the user has `sudo` access, a script can be added for this purpose (Please refer 
+  to the comments on the first lines of [`flushcache.sh`](../flushcache.sh)).
 
 ## Downloading Public Graphs
-
-Please refer to [https://blogs.qub.ac.uk/DIPSA/graphs-list-2024](https://blogs.qub.ac.uk/DIPSA/graphs-list-2024).
 
 You may find WebGraphs in:
 
@@ -82,6 +81,7 @@ You may find WebGraphs in:
   - [https://docs.softwareheritage.org/devel/swh-dataset/graph/dataset.htm](https://docs.softwareheritage.org/devel/swh-dataset/graph/dataset.html)
   - [https://blogs.qub.ac.uk/DIPSA/MS-BioGraphs](https://blogs.qub.ac.uk/dipsa/ms-biographs/) \[DOI: [10.21227/gmd9-1534](https://doi.org/10.21227/gmd9-1534)\]
 
+Please also refer to [https://blogs.qub.ac.uk/DIPSA/graphs-list-2024](https://blogs.qub.ac.uk/DIPSA/graphs-list-2024).
 
 ## Executing an Algorithm For a Numebr of Graphs
 

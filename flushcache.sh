@@ -2,11 +2,13 @@
 #
 # This script is called to remove storage data that are cached by OS while loading the graph
 #
-# Having a sudo access to the machine with a Linux distribution, 
+# Having a sudo access to the machine with a Linux distribution,  
 # the /drop_caches.sh file can be created by running the following three steps
 # 	sudo echo -e '#!/bin/bash\n\necho 3 > /proc/sys/vm/drop_caches\n' > /drop_caches.sh
 # 	sudo chmod a+x /drop_caches.sh
 # 	sudo echo -e 'ALL  ALL = (ALL) NOPASSWD: /drop_caches.sh\n' >> /etc/sudoers
+#
+# [1] https://www.kernel.org/doc/Documentation/sysctl/vm.txt
 #
 # If you have created a similar script, you may add its path as a new line to the COMMS variable
 #

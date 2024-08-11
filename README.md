@@ -50,10 +50,12 @@ Please refer to [Graph Loading Documentation](docs/3-loading.md).
 Please refer to [Launcher Script Documentaion](4-launcher.md).
  
 ### Bugs & Support
+
 If you receive wrong results or you are suspicious about parts of the code, 
 please [contact us](https://orcid.org/0000-0002-7465-8003).
 
 ### License
+
 Licensed under the GNU v3 General Public License, as published by the Free Software Foundation. 
 You must not use this Software except in compliance with the terms of the License. 
 Unless required by applicable law or agreed upon in writing, this Software is distributed 
