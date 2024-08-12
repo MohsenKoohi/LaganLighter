@@ -23,9 +23,11 @@ Environment variables may be passed to `make` to specify the input graph:
     - *`text`*, 
     - *`PARAGRAPHER_CSX_WG_400_AP`* (graphs with 4 Bytes vertex IDs and no weights), 
     - *`PARAGRAPHER_CSX_WG_404_AP`* (graphs with 4 Bytes vertex IDs and 4 Bytes `uint` edge weights), or 
-    - *`PARAGRAPHER_CSX_WG_800_AP`* (graphs with 8 Bytes vertex IDs and no weights). 
-  The default value is `text`.
-  Please refer to [ParaGrapher Documentation](https://github.com/MohsenKoohi/ParaGrapher/wiki/API-Documentation)
+    - *`PARAGRAPHER_CSX_WG_800_AP`* (graphs with 8 Bytes vertex IDs and no weights).
+      
+    The default value is `text`.
+    
+    Please refer to [ParaGrapher Documentation](https://github.com/MohsenKoohi/ParaGrapher/wiki/API-Documentation)
   for more details about ParaGrapher types.
 
   - `LL_INPUT_GRAPH_IS_SYMMETRIC`: with a value of `0` or `1`, specifies if the 
