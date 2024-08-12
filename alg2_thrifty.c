@@ -98,6 +98,47 @@ int main(int argc, char** args)
 
 		printf("Validation:\t\t\033[1;33mCorrect\033[0;37m\n");
 
+	// Writing to the report
+		if(LL_OUTPUT_REPORT_PATH != NULL)
+		{
+			FILE* out = fopen(LL_OUTPUT_REPORT_PATH, "a");
+			assert(out != NULL);
+
+			if(LL_INPUT_GRAPH_BATCH_ORDER == 0)
+			{
+				fprintf(out, "%-20s; %-8s; %-8s; %-13s;", "Dataset", "|V|", "|E|", "Time (ms)");
+				if(exec_info)
+					for(unsigned int i=0; i<pe->hw_events_count; i++)
+						fprintf(out, " %-8s;", pe->hw_events_names[i]);
+				fprintf(out, "\n");
+			}
+
+			char temp1 [16];
+			char temp2 [16];			
+			char* name = strrchr(LL_INPUT_GRAPH_PATH, '/');
+			if(name == NULL)
+				name = LL_INPUT_GRAPH_PATH;
+			else
+				name++;
+			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
+				name = strndup(name, strrchr(name, '.') - name);
+			
+			fprintf(out, "%-20s; %'8s; %'8s; %'13.1f;", 
+				name, ul2s(graph->vertices_count, temp1), ul2s(graph->edges_count, temp2), exec_info[0] / 1e6);
+			if(exec_info)
+				for(unsigned int i=0; i<pe->hw_events_count; i++)					
+					fprintf(out, " %'8s;", ul2s(exec_info[i + 1], temp1));
+			fprintf(out, "\n");
+
+			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
+				free(name);
+			name = NULL;
+
+			fclose(out);
+			out = NULL;
+		}
+
+	// Releasing memory
 		cc_release(graph, cc_t);
 		cc_t = NULL;
 		cc_release(graph, cc_p);

@@ -68,7 +68,7 @@ int main(int argc, char** args)
 
 			if(LL_INPUT_GRAPH_BATCH_ORDER == 0)
 			{
-				fprintf(out, "%-20s; %-10s; %-10s; %-13s;", "Dataset", "|V|", "|E|", "Time (ms)");
+				fprintf(out, "%-20s; %-8s; %-8s; %-13s;", "Dataset", "|V|", "|E|", "Time (ms)");
 				if(exec_info)
 					for(unsigned int i=0; i<pe->hw_events_count; i++)
 						fprintf(out, " %-8s;", pe->hw_events_names[i]);
@@ -76,10 +76,7 @@ int main(int argc, char** args)
 			}
 
 			char temp1 [16];
-			char temp2 [16];
-			ul2s(csc_graph->vertices_count, temp1);
-			ul2s(csc_graph->edges_count, temp2);
-			
+			char temp2 [16];			
 			char* name = strrchr(LL_INPUT_GRAPH_PATH, '/');
 			if(name == NULL)
 				name = LL_INPUT_GRAPH_PATH;
@@ -88,13 +85,11 @@ int main(int argc, char** args)
 			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
 				name = strndup(name, strrchr(name, '.') - name);
 			
-			fprintf(out, "%-20s; %'10s; %'10s; %'13.1f;", name, temp1, temp2, exec_info[0] / 1e6);
+			fprintf(out, "%-20s; %'8s; %'8s; %'13.1f;", 
+				name, ul2s(csc_graph->vertices_count, temp1), ul2s(csc_graph->edges_count, temp2), exec_info[0] / 1e6);
 			if(exec_info)
-				for(unsigned int i=0; i<pe->hw_events_count; i++)
-				{
-					ul2s(exec_info[i + 1], temp1);
-					fprintf(out, " %'8s;", temp1);
-				}
+				for(unsigned int i=0; i<pe->hw_events_count; i++)					
+					fprintf(out, " %'8s;", ul2s(exec_info[i + 1], temp1));
 			fprintf(out, "\n");
 
 			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)

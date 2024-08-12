@@ -150,14 +150,13 @@
 # Processing graphs
 	echo -e "\n\033[0;34mProcessing Datasets\033[0;37m"
 	hostname=`hostname|cut -f1 -d.`
-	c=0;
-	while [ 1 == 1 ]; do
-		log_folder="logs/$ALG-$hostname-$c"
-		if [ ! -d $log_folder ]; then
-			break;
-		fi;
-		c=`echo "$c+1"|bc`
-	done
+	if [ ! -d logs ]; then
+		mkdir logs
+		c=0
+	else
+		c=`(cd logs; find  -maxdepth 1 \( -name "$ALG-$hostname*" \) | wc -l)`
+	fi
+	log_folder="logs/$ALG-$hostname-$c"
 
 	mkdir -p $log_folder
 	echo "  Log Folder: "$log_folder
@@ -168,7 +167,6 @@
 
 	c=0;
 	for ds in $datasets; do
-		
 		sf=`echo $ds | rev | cut -f1 -d. | rev`
 		input_graph=""
 		input_type=""

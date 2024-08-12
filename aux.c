@@ -427,7 +427,7 @@ void* create_shm(char* shm_file_name, unsigned long length)
 	return mem;
 }
 
-void ul2s(unsigned long in, char* out)
+char* ul2s(unsigned long in, char* out)
 {
 	assert(out != NULL);
 
@@ -448,7 +448,7 @@ void ul2s(unsigned long in, char* out)
 	else
 		sprintf(out, "%lu", in);
 
-	return;
+	return out;
 }
 
 #endif

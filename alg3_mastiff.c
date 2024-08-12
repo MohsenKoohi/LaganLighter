@@ -104,7 +104,7 @@ int main(int argc, char** args)
 		}
 
 	// Running MSF
-		// Mastiff
+		// MASTIFF
 		struct msf* res_mastiff = NULL;
 		
 		res_mastiff = msf_mastiff(pe, wgraph, exec_info, 1U);
@@ -127,37 +127,77 @@ int main(int argc, char** args)
 			release_numa_interleaved_ll_404_graph(cwg);
 			cwg = NULL;
 		}
-			
-		// Releasing graph and memory
-			if(res_prim)
+
+	// Writing to the report
+		if(LL_OUTPUT_REPORT_PATH != NULL)
+		{
+			FILE* out = fopen(LL_OUTPUT_REPORT_PATH, "a");
+			assert(out != NULL);
+
+			if(LL_INPUT_GRAPH_BATCH_ORDER == 0)
 			{
-				msf_free(res_prim);
-				res_prim = NULL;
-			}	
-			if(res_mastiff)
-			{
-				msf_free(res_mastiff);
-				res_mastiff = NULL;
+				fprintf(out, "%-20s; %-8s; %-8s; %-13s;", "Dataset", "|V|", "|E|", "Time (ms)");
+				if(exec_info)
+					for(unsigned int i=0; i<pe->hw_events_count; i++)
+						fprintf(out, " %-8s;", pe->hw_events_names[i]);
+				fprintf(out, "\n");
 			}
 
-			if(sym_graph != NULL)
-			{
-				if(
-					(strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_400_AP") == 0 || strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_800_AP") == 0) 
-					&& LL_INPUT_GRAPH_IS_SYMMETRIC && (read_flags & 1U<<31) == 1
-				)
-					release_shm_ll_400_graph(sym_graph);
-				else
-					release_numa_interleaved_ll_400_graph(sym_graph);
-				sym_graph = NULL;
-			}
-
-			if(strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_404_AP") == 0 && (read_flags & 1U<<31) == 1)
-				release_shm_ll_404_graph(wgraph);
+			char temp1 [16];
+			char temp2 [16];			
+			char* name = strrchr(LL_INPUT_GRAPH_PATH, '/');
+			if(name == NULL)
+				name = LL_INPUT_GRAPH_PATH;
 			else
-				release_numa_interleaved_ll_404_graph(wgraph);
-				
-			wgraph = NULL;
+				name++;
+			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
+				name = strndup(name, strrchr(name, '.') - name);
+			
+			fprintf(out, "%-20s; %'8s; %'8s; %'13.1f;", 
+				name, ul2s(wgraph->vertices_count, temp1), ul2s(wgraph->edges_count, temp2), exec_info[0] / 1e6);
+			if(exec_info)
+				for(unsigned int i=0; i<pe->hw_events_count; i++)					
+					fprintf(out, " %'8s;", ul2s(exec_info[i + 1], temp1));
+			fprintf(out, "\n");
+
+			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
+				free(name);
+			name = NULL;
+
+			fclose(out);
+			out = NULL;
+		}
+			
+	// Releasing graph and memory
+		if(res_prim)
+		{
+			msf_free(res_prim);
+			res_prim = NULL;
+		}	
+		if(res_mastiff)
+		{
+			msf_free(res_mastiff);
+			res_mastiff = NULL;
+		}
+
+		if(sym_graph != NULL)
+		{
+			if(
+				(strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_400_AP") == 0 || strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_800_AP") == 0) 
+				&& LL_INPUT_GRAPH_IS_SYMMETRIC && (read_flags & 1U<<31) == 1
+			)
+				release_shm_ll_400_graph(sym_graph);
+			else
+				release_numa_interleaved_ll_400_graph(sym_graph);
+			sym_graph = NULL;
+		}
+
+		if(strcmp(LL_INPUT_GRAPH_TYPE,"PARAGRAPHER_CSX_WG_404_AP") == 0 && (read_flags & 1U<<31) == 1)
+			release_shm_ll_404_graph(wgraph);
+		else
+			release_numa_interleaved_ll_404_graph(wgraph);
+			
+		wgraph = NULL;
 
 
 	printf("\n\n");
