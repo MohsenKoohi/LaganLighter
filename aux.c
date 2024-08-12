@@ -431,8 +431,10 @@ void ul2s(unsigned long in, char* out)
 {
 	assert(out != NULL);
 
-	if(in > 1e18)
-		sprintf(out, "%'.1fE", in/1e18);
+	if(in > 1e21)
+		sprintf(out, "%'.1fZ", in/1e21);
+	else if(in > 1e18)
+		sprintf(out, "%.1fE", in/1e18);
 	else if(in > 1e15)
 		sprintf(out, "%.1fP", in/1e15);
 	else if(in > 1e12)
