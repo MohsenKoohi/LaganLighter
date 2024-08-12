@@ -53,11 +53,12 @@ you may need to pass the above variables.
 E.g., `LL_INPUT_GRAPH_PATH=data/cnr-2000 LL_INPUT_GRAPH_TYPE=PARAGRAPHER_CSX_WG_400_AP make alg1_sapco_sort` calls the algorithm
 for the `data/cnr-2000`. 
 
-The following arguments may also be passed to the `make`:
+The following variables may be set when calling `make`:
   - `no_ht=1` disables hyperthreading,
   - `debug=1` enables debugging (-g of gcc)
   - `wait_passive=1` sets [`OMP_WAIT_POLICY`](https://www.openmp.org/spec-html/5.0/openmpse55.html) 
   to `passive` instead of its default value which is `active`.
+E.g., `make alg1_sapco_sort no_ht=1 wait_passive=1`.
 
 ## How Does LaganLighter Load a Graph?
 

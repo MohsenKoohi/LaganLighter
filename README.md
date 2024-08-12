@@ -30,9 +30,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  are not in the library path,`LD_LIBRARY_PATH`.
  - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. 
  - For identifying input graph and other options, please refer to [LaganLighter Documents, Loading Graphs](docs/3-loading.md).
- - To disable hyper-threading, please use `no_ht=1` with make.
- - To enable debugging (-g of gcc), use `debug=1`.
-
+ 
 ### How Does LaganLighter Work?
 
 Please refer to [LaganLighter Documentation](docs/readme.md)
