@@ -51,8 +51,11 @@ you may need to pass the above variables.
 E.g., `LL_INPUT_GRAPH_PATH=data/cnr-2000 LL_INPUT_GRAPH_TYPE=PARAGRAPHER_CSX_WG_400_AP make alg1_sapco_sort` calls the algorithm
 for the `data/cnr-2000`. 
 
-Further args such as `no_ht=1` and `debug=1` can be passed to `make` to disable hyperthreading and 
-to enable debugging (-g of gcc), respectively.
+The following arguments may also be passed to the `make`:
+  - `no_ht=1` disables hyperthreading,
+  - `debug=1` enables debugging (-g of gcc)
+  - `wait_passive=1` sets [`OMP_WAIT_POLICY`](https://www.openmp.org/spec-html/5.0/openmpse55.html) 
+  to `passive` instead of its default value which is `active`.
 
 ## How Does LaganLighter Load a Graph?
 
@@ -61,15 +64,20 @@ To load the graphs in *WebGraph* format (using ParaGrapher), functions `get_ll_4
 and `get_ll_404_webgraph()` should be called. These 3 functions have been defined in [`graph.c`](../graph.c) and
 load the graph in the following steps:
 
-  1. Checking if the graph has been stored as a shared memory object. In that case the graph is returned to the user
+  - Checking if the graph has been stored as a shared memory object. In that case the graph is returned to the user
   by calling `get_shm_ll_400_graph()` and `get_shm_ll_404_graph()`. This graph should be released by calling 
   `release_shm_ll_400_graph()` or `release_shm_ll_404_graph()`.
 	
-  2. If the graph is not found in the shared memory, the graph is loaded/decompressed from the secondary storage and
+  - If the graph is not found in the shared memory, the graph is loaded/decompressed from the secondary storage and
   a NUMA-interleaved memory is allocated for the graph. This graph should be released by calling
-  `release_numa_interleaved_ll_400_graph()` or `release_numa_interleaved_ll_404_graph()`.
+  `release_numa_interleaved_ll_400_graph()` or `release_numa_interleaved_ll_404_graph()`. 
 
-  3. When the graph is loaded/decompressed from the secondary storage, the OS caches some contents of the graph
+    *Note*: The graphs are loaded before calling `initialize_omp_par_env()` which initializes OpenMP threads
+    (to prevent busy wait of the OpenMP threads initialized by `OMP_WAIT_POLICY=active`, by default). 
+    The `get_ll_400_txt_graph()` function reads textual graphs sequentially and `get_ll_40X_webgraph()` functions
+    call the ParaGrapher library which uses the `pthread` for parallelization.
+
+  - When the graph is loaded/decompressed from the secondary storage, the OS caches some contents of the graph
   in memory. This cached data by OS may impact the performance of algorithms especially when a large percentage of the
   memory is used. To prevent this, by the end of graph loading, the `flush_os_cache()` functions is used to run th e
   [`flushcache.sh`](../flushcache.sh) script.

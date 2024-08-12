@@ -24,13 +24,21 @@ _available_cores := $(shell echo "$(_available_threads)/$(_threads_per_core)"|bc
 
 # _order := {$(shell numactl --hardware | grep cpus | cut -f2 -d":" | xargs | sed -e "s/ /},{/g")}
 
+ifdef wait_passive
+	OMP_WAIT_POLICY := passive
+else
+	OMP_WAIT_POLICY := active
+endif
+
 ifdef no_ht
 	# without hyper-threading
-	OMP_VARS :=  OMP_PLACES={0}:$(_total_cores):1 OMP_PROC_BIND=close OMP_DYNAMIC=false OMP_WAIT_POLICY=active OMP_NUM_THREADS=$(_available_cores)
+	OMP_NUM_THREADS := $(_available_cores)
 else
 	# with hyper-threading
-	OMP_VARS :=  OMP_PLACES=threads OMP_PROC_BIND=close OMP_DYNAMIC=false OMP_WAIT_POLICY=active OMP_NUM_THREADS=$(_available_threads)
+	OMP_NUM_THREADS := $(_available_threads)
 endif
+
+OMP_VARS := OMP_NUM_THREADS=$(OMP_NUM_THREADS) OMP_DYNAMIC=false OMP_WAIT_POLICY=$(OMP_WAIT_POLICY)
 
 ifdef debug
 	COMPILE_TYPE := -g

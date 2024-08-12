@@ -75,10 +75,10 @@ int main(int argc, char** args)
 				fprintf(out, "\n");
 			}
 
-			char vs [32];
-			char es [32];
-			ul2s(csc_graph->vertices_count, vs);
-			ul2s(csc_graph->edges_count, es);
+			char temp1 [16];
+			char temp2 [16];
+			ul2s(csc_graph->vertices_count, temp1);
+			ul2s(csc_graph->edges_count, temp2);
 			
 			char* name = strrchr(LL_INPUT_GRAPH_PATH, '/');
 			if(name == NULL)
@@ -88,12 +88,12 @@ int main(int argc, char** args)
 			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
 				name = strndup(name, strrchr(name, '.') - name);
 			
-			fprintf(out, "%-20s; %'10s; %'10s; %'13.1f;", name, vs, es, exec_info[0] / 1e6);
+			fprintf(out, "%-20s; %'10s; %'10s; %'13.1f;", name, temp1, temp2, exec_info[0] / 1e6);
 			if(exec_info)
 				for(unsigned int i=0; i<pe->hw_events_count; i++)
 				{
-					ul2s(exec_info[i + 1], vs);
-					fprintf(out, " %'8s;", vs);
+					ul2s(exec_info[i + 1], temp1);
+					fprintf(out, " %'8s;", temp1);
 				}
 			fprintf(out, "\n");
 

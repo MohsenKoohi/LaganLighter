@@ -218,8 +218,7 @@
 
 # Printing the report
 	echo -e "\n\033[0;34mResults\033[0;37m"
-	echo 
-	echo "  From $report_path: "
+	echo "  Report file: $report_path"
 	echo 
 	while IFS= read -r line; do
 		echo "  $line" 
