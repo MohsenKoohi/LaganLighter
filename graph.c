@@ -749,12 +749,20 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type, unsigned i
 	return g;	
 }
 
-int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g)
+/*
+	flags:
+		bit 0: Directly use `file_name` without calling `get_shm_graph_name()`.
+*/
+int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_graph* g, unsigned int flags)
 {
 	assert(file_name != NULL && g != NULL);
 
 	int ret = -1;
-	char* shm_name = get_shm_graph_name(file_name);
+	char* shm_name;
+	if(flags & 1U)
+		shm_name = file_name;
+	else
+		shm_name = get_shm_graph_name(file_name);
 	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + g->edges_count * sizeof(unsigned int);
 	
 	unsigned long* sg = create_shm(shm_name, graph_size);
@@ -789,18 +797,25 @@ int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_gr
 		ret = 0;
 	}
 
-	free(shm_name);
-	shm_name = NULL;
+	if(shm_name != file_name)
+	{
+		free(shm_name);
+		shm_name = NULL;
+	}
 
 	return ret;
 }
 
-int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_404_graph* g)
+int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_404_graph* g, unsigned int flags)
 {
 	assert(file_name != NULL && g != NULL);
 
 	int ret = -1;
-	char* shm_name = get_shm_graph_name(file_name);
+	char* shm_name;
+	if(flags & 1U)
+		shm_name = file_name;
+	else
+		shm_name = get_shm_graph_name(file_name);
 	unsigned long graph_size = (2 + g->vertices_count + 1) * sizeof(unsigned long) + 2UL * g->edges_count * sizeof(unsigned int);
 	
 	unsigned long* sg = create_shm(shm_name, graph_size);
@@ -835,8 +850,11 @@ int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_404_gr
 		ret = 0;
 	}
 
-	free(shm_name);
-	shm_name = NULL;
+	if(shm_name != file_name)
+	{
+		free(shm_name);
+		shm_name = NULL;
+	}
 
 	return ret;
 }

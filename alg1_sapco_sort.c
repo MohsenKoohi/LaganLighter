@@ -28,7 +28,7 @@ int main(int argc, char** args)
 
 	// Store graph in shm
 		if(LL_STORE_INPUT_GRAPH_IN_SHM & (read_flags & 1U<<31) == 0)
-			store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, graph);
+			store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, graph, 0);
 	
 	// Exec info	
 		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);

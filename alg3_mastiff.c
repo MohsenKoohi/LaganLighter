@@ -56,9 +56,9 @@ int main(int argc, char** args)
 		if(LL_STORE_INPUT_GRAPH_IN_SHM && (read_flags & 1U<<31) == 0)
 		{
 			if(csr_graph != NULL)
-				store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, csr_graph);
+				store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, csr_graph, 0);
 			else
-				store_shm_ll_404_graph(pe, LL_INPUT_GRAPH_PATH, wgraph);
+				store_shm_ll_404_graph(pe, LL_INPUT_GRAPH_PATH, wgraph, 0);
 		}
 		
 	// Initializing exec info
