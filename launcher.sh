@@ -9,8 +9,10 @@
 	echo "  df=path/to/datasets/folder (default ./data)"
 	echo "  make-flags=\"flags (e.g. no_ht=1) to be passed to the \`make\`, separated by space, and put in double quotes\" (default empty)"
 	echo "  program-args=\"arguemnts to be passed to the \`program\` by \`make\`, separated by space, and put in double quotes\" (default empty)"
-	echo "  sa=n (stop after n-th dataset, default: -1)"
-	echo "  -iw (include weighted graphs, default: 0)"
+	echo "  sf=m (start from dataset m, numbers starting from 0, default: 0)"
+	echo "  sa=n (stop after processing dataset n, numbers starting from 0, default: -1)"
+	echo "  -ld (just list datasets, default: 0)"
+	echo "  -iw (include weighted graphs, default: false)"
 	echo "  -shm-store (store graphs in shm, default: 0)"
 	echo "  -shm-delete (delete shm graphs at the end, default: 0)"
 	echo
@@ -34,7 +36,9 @@
 	MAKE_FLAGS=""
 	PROGRAM_ARGS=""
 	IW=0
+	SD="0"
 	SA="-1"
+	LD=0
 	SHM_STORE=0
 	SHM_DELETE=0
 
@@ -51,8 +55,18 @@
 			PROGRAM_ARGS=`echo "${!i}" | cut -f2- -d=`
 		fi
 
+		if [[ "${!i}" == *"sf="* ]]; then 
+			SF=`echo "${!i}" | cut -f2 -d=`
+		fi
+
 		if [[ "${!i}" == *"sa="* ]]; then 
 			SA=`echo "${!i}" | cut -f2 -d=`
+		fi
+
+		if [ "${!i}" == "-ld" ]; then
+			LD=1
+			SF="0"
+			SA="-1"
 		fi
 
 		if [ "${!i}" == "-iw" ]; then
@@ -77,7 +91,9 @@
 	echo "  Make flags (make-flags): \"$MAKE_FLAGS\""
 	echo "  Program args (program-args): \"$PROGRAM_ARGS\""
 	echo "  Datasets folder (df): $DF" 
-	echo "  Stop after n-th dataset (sa): $SA"
+	echo "  Start from dataset (sf): $SF"
+	echo "  Stop after dataset (sa): $SA"
+	echo "  List datasets (-ld): $LD"
 	echo "  Include weighted graphs (-iw): $IW"
 	echo "  Store graph in shm (-shm-store): $SHM_STORE"
 	echo "  Delete shm graphs at end (-shm-delete): $SHM_DELETE"
@@ -95,19 +111,19 @@
 	dataset_edges=""
 	for (( i=0; i <  ${#initial_datasets[@]}; i++)); do
 		ds=${initial_datasets[$i]}
-		sf=`echo $ds | rev | cut -f1 -d. | rev`
+		suffix=`echo $ds | rev | cut -f1 -d. | rev`
 		edges_count=0
 		
-		if [ $sf == "txt" ]; then
+		if [ $suffix == "txt" ]; then
 			edges_count=`head "$DF/$ds" -n2 | tail -n1`
 		fi
 
-		if [ $sf == "graph" ]; then
+		if [ $suffix == "graph" ]; then
 			prop_file=`echo $ds | sed 's/\(.*\)\.graph/\1\.properties/'`
 			edges_count=`cat "$DF/$prop_file" | grep -P "\barcs[\s]*=" | cut -f2 -d= | xargs`
 		fi
 
-		if [ $sf == "labels" ]; then
+		if [ $suffix == "labels" ]; then
 			laebls_prop_file=`echo $ds | sed 's/\(.*\)\.labels/\1\.properties/'`
 			prop_file=`cat "$DF/$laebls_prop_file" | grep -P "underlyinggraph[\s]*=" | cut -f2 -d=|xargs`".properties"
 			edges_count=`cat "$DF/$prop_file" | grep -P "\\barcs=" | cut -f2 -d=`
@@ -129,7 +145,7 @@
 		datasets="$datasets $ds"
 		dataset_edges="$dataset_edges $edges_count"
 
-		# echo $i $ds $sf $edges_count;
+		# echo $i $ds $suffix $edges_count;
 	done	
 
 	datasets=($datasets);
@@ -140,12 +156,30 @@
 	done | sort -n -k2`
 
 	datasets=""
+	c=0
 	while IFS= read -r line; do
+		
+		if [[ $c < $SF ]]; then
+			c=`echo "$c+1"|bc`
+			continue
+		fi
+
 		ds=`echo $line|cut -f1 -d' '`
 		ec=`echo $line|cut -f2 -d' '`
-		echo "  $ds, |E|: $ec" 
+		echo "  $c- $ds, |E|: $ec" 
 		datasets="$datasets $ds"
+
+		if [ $SA == $c ]; then
+			break
+		fi
+		c=`echo "$c+1"|bc`
+		
 	done <<< "$sorted_datasets"
+
+	if [ $LD == "1" ]; then
+		echo -e "\n"
+		exit
+	fi
 
 # Processing graphs
 	echo -e "\n\033[0;34mProcessing Datasets\033[0;37m"
@@ -165,21 +199,22 @@
 	echo "  Report file: "$report_path
 	echo
 
-	c=0;
+	c=$SF;
 	for ds in $datasets; do
-		sf=`echo $ds | rev | cut -f1 -d. | rev`
+
+		suffix=`echo $ds | rev | cut -f1 -d. | rev`
 		input_graph=""
 		input_type=""
 
-		if [ $sf == "txt" ]; then
+		if [ $suffix == "txt" ]; then
 			input_graph="$DF/$ds"
 			input_type="text"
 		fi
-		if [ $sf == "graph" ]; then
+		if [ $suffix == "graph" ]; then
 			input_graph="$DF/"`echo $ds | sed 's/\(.*\)\.graph/\1/'`
 			input_type="PARAGRAPHER_CSX_WG_800_AP"
 		fi
-		if [ $sf == "labels" ]; then
+		if [ $suffix == "labels" ]; then
 			input_graph="$DF/"`echo $ds | sed 's/\(.*\)\.labels/\1/'`
 			input_type="PARAGRAPHER_CSX_WG_404_AP"
 		fi
@@ -203,10 +238,8 @@
 		env $cmd make $ALG $MAKE_FLAGS args="$PROGRAM_ARGS" 1>$ds_log_file 2>&1
 
 		echo 
+		
 		c=`echo "$c+1"|bc`
-		if [ $SA == $c ]; then
-			break;
-		fi
 	done
 
 # Post processing actions 
