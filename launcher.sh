@@ -65,8 +65,6 @@
 
 		if [ "${!i}" == "-ld" ]; then
 			LD=1
-			SF="0"
-			SA="-1"
 		fi
 
 		if [ "${!i}" == "-iw" ]; then
