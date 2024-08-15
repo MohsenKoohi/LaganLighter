@@ -313,6 +313,10 @@ struct par_env* initialize_omp_par_env()
 			// if(((eax & 0xf00)>>8) < 15)
 			// 	pe->cpu_model = (eax & 0xf0)>>4;
 			printf("CPU Model: %u\n", pe->cpu_model);
+
+			#ifdef __GNUC__
+				printf("GCC Version: %u.%u.%u\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+			#endif
 		}
 
 	// Reading cache info
