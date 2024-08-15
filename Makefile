@@ -3,15 +3,7 @@ GXX := g++
 LIB := paragrapher/lib64:$(LD_LIBRARY_PATH)
 SHELL := /bin/bash
 
-UP_GCC_DIR := ~/Libs/gcc9.2
-ifneq ("$(wildcard $(UP_GCC_DIR)/bin/gcc)","")
-	GCC := $(UP_GCC_DIR)/bin/gcc
-	GXX := $(UP_GCC_DIR)/bin/g++
-	LIB := $(UP_GCC_DIR)/lib64:$(LIB)
-endif
-
 OBJ := obj
-LIB := $(LIB):$(shell realpath ~)/Libs/numactl-2.0.1/usr/local/lib:$(shell realpath ~)/Libs/papi7/lib:
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
 FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt # -lpfm
