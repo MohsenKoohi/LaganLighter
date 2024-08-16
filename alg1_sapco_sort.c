@@ -27,7 +27,7 @@ int main(int argc, char** args)
 		struct par_env* pe= initialize_omp_par_env();
 
 	// Store graph in shm
-		if(LL_STORE_INPUT_GRAPH_IN_SHM & (read_flags & 1U<<31) == 0)
+		if(LL_STORE_INPUT_GRAPH_IN_SHM && (read_flags & 1U<<31) == 0)
 			store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, graph, 0);
 	
 	// Exec info	
