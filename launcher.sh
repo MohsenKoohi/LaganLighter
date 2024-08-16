@@ -2,6 +2,32 @@
 #
 # This script runs an algorithm for a number of graph datasets
 
+function ul2s()
+{
+	in=$1
+	ul2s_out=""
+
+	if [ `echo "$in > 10^21" | bc` = 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^21" | bc`"Z"
+	else if [ `echo "$in > 10^18" | bc` = 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^18" | bc`"E"
+	else if [ `echo "$in > 10^15" | bc` == 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^15" | bc`"P"
+	else if [ `echo "$in > 10^12" | bc` == 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^12" | bc`"T"
+	else if [ `echo "$in > 10^9" | bc` == 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^9" | bc`"G"
+	else if [ `echo "$in > 10^6" | bc` == 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^6" | bc`"M"
+	else if [ `echo "$in > 10^3" | bc` == 1 ]; then 
+		ul2s_out=`echo "scale=3; $in/10^3 | bc"`"k"
+	else 
+		ul2s_out=$in
+	fi fi fi fi fi fi fi
+
+	return;
+}
+
 # Print help
 	echo -e "\n\033[1;35mLaganLighter Launcher Script\033[0;37m\n"
 	echo "Arguments to be passed to this script:"
@@ -164,7 +190,9 @@
 
 		ds=`echo $line|cut -f1 -d' '`
 		ec=`echo $line|cut -f2 -d' '`
-		echo "  $c- $ds, |E|: $ec" 
+		ul2s $ec
+		echo "  $c- $ds, |E|: $ul2s_out "
+		unset ul2s_out
 		datasets="$datasets $ds"
 
 		if [ $SA == $c ]; then
