@@ -5,7 +5,6 @@
 #include "graph.c"
 #include "trans.c"
 
-
 int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int vertices_count)
 {
 	int res= 1;
@@ -48,8 +47,9 @@ int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int
 	}
 
 	This function returns an array containing the vertices IDs with degrees in descending order. 
-	This array is used as an old to new reordering array (RA_n2o) to reorder the graph.
-
+	This array can be used as an RA_n2o, new to old reordering array (indexed by a new vertex ID to get its old vertex ID ) 
+	to reorder the graph.
+	
 	We introduce SAPCo Sort as a novel parallel count-sorting for skewed datasets. 
 	It has 4 phases:
 	(1) Initialization: Identifying max-degree, dividing the vertices into a number of partitions, and allocating a per-partition counter that is an array of MAX_LOW_DEGREE (e.g. 1000) integers. A global counter array is also allocated for counting high-degree vertices.
@@ -314,7 +314,8 @@ unsigned int* sapco_sort_degree_ordering(struct par_env* pe, struct ll_400_graph
 
 /*
 	This function returns an array containing the vertices IDs with degrees in descending order. 
-	This array can be used as an RA_n2o, old to new reordering array to reorder the graph.
+	This array can be used as an RA_n2o, new to old reordering array (indexed by a new vertex ID to get its old vertex ID ) 
+	to reorder the graph.
 	
 	We use parallel counting sort:
 		Step-1: Identifying max-degree
