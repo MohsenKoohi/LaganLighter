@@ -875,18 +875,8 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 					// Preparing the seed for randomization
 						// We create random weights that remain the same in different executions
 						// So for each partition we create a repeatable seed
-						// Using splitmix64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds 
 						unsigned long s[4];
-						{
-							unsigned long x = partition;
-							for(int si = 0; si < 4; si++)
-							{
-								unsigned long z = (x += 0x9e3779b97f4a7c15);
-								z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
-								z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
-								s[si] = z ^ (z >> 31);
-							}
-						}
+						rand_initialize_splitmix64(s, partition);
 
 					// Iterating over vertices in this partition
 					for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)		
@@ -897,19 +887,7 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 							if(g->edges_list[e] > v)
 								break;
 
-							unsigned long rand_val;
-							// Setting the rand_val using xoshiro256 (https://prng.di.unimi.it/xoshiro256plusplus.c)
-							{
-								rand_val = s[0] + (((s[0] + s[3]) << 23) | ((s[0] + s[3]) >> (64 - 23)));
-
-								unsigned long t = s[1] << 17;
-								s[2] ^= s[0];
-								s[3] ^= s[1];
-								s[1] ^= s[2];
-								s[0] ^= s[3];
-								s[2] ^= t;
-								s[3] = (s[3] << 45) | (s[3] >> (64 - 45));
-							}
+							unsigned long rand_val = rand_xoshiro256(s);
 
 							graph->edges_list[2 * e] = g->edges_list[e];
 							graph->edges_list[2 * e + 1] = 1 + (rand_val % max_weight);

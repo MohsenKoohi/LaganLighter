@@ -451,7 +451,7 @@ char* ul2s(unsigned long in, char* out)
 	return out;
 }
 
-// Using splitmix64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds using the seed x
+// SPLITMIXX64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds using the seed x
 void rand_initialize_splitmix64(unsigned long s[4], unsigned long x)
 {	
 	for(int si = 0; si < 4; si++)
