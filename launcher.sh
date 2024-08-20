@@ -62,7 +62,7 @@ function ul2s()
 	MAKE_FLAGS=""
 	PROGRAM_ARGS=""
 	IW=0
-	SD="0"
+	SF=0
 	SA="-1"
 	LD=0
 	SHM_STORE=0
