@@ -1,0 +1,37 @@
+#  LaganLighter Docs: Random Vertex Relabelling
+
+To evaluate the impacts of locality-optimizing reordering algorithms, a baseline
+is required. To create the baseline a random assignment of IDs to vertices may be used
+to produce a representation of the graph with reduced 
+locality \[
+[DOI:10.1109/ISPASS57527.2023.00029](https://doi.org/10.1109/ISPASS57527.2023.00029),
+[DOI:10.1109/IISWC53511.2021.00020](https://doi.org/10.1109/IISWC53511.2021.00020)
+\].
+
+To that end, we create the `random_ordering()` function in [relabel.c](../relabel.c) file.
+It consists a number of iterations. In each iteration, concurrent threads traverse the list
+of vertices and assign them new IDs. The function uses [xoshiro](https://prng.di.unimi.it/) 
+to produce random numbers.
+
+The [alg4_randomize](../alg4_randomize.c) tests this function for a number of graphs.
+For each dataset, an initial plot of 
+degree distribution of Neighbor to Neighbor Average ID Distance (**N2N AID**)
+\[[DOI:10.1109/IISWC53511.2021.00020](https://doi.org/10.1109/IISWC53511.2021.00020)\]
+is created. Also, after each iteration of `random_ordering()` the N2N AID distribution
+is plotted. This shows the impacts of randomization.
+
+The complete results for all graphs can be seen in [this PDF file](hpgp.net/LaganLighter/outputs/alg4/alg4_randomize.pdf).
+The results for some graphs are in the following.
+
+*Note:* the algorithm has been run on graphs containing outgoing edges of each vertex.
+
+![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-sk.png)
+![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-ms50.png)
+![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-eu15.png)
+![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-wdc12.png)
+
+The algorithm has been executed on a machine with two AMD 7401 CPUs, 128 cores, 128 threads. 
+The report created by the [`launcher`](4-launcher.md) is in the following.  
+
+![](https://hpgp.net/LaganLighter/outputs/alg4/report.png)
+
