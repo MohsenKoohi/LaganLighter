@@ -12,7 +12,6 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <mqueue.h>
 #include <time.h>
 #include <pthread.h>
 #include <libgen.h>

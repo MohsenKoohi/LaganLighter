@@ -539,4 +539,148 @@ unsigned int* counting_sort_degree_ordering(struct par_env* pe, struct ll_400_gr
 	return ret;
 }
 
+/*
+	A vertex relabelling arrary to randomize the graph.
+	
+	`call_back`, if defined,  is called at the end of each iteration.
+*/
+unsigned int* random_ordering(struct par_env* pe, unsigned int vertices_count, int iterations, void (*call_back)(unsigned int*, unsigned int))
+{
+	// (1.1) Initial checks
+		unsigned long t0 = - get_nano_time();
+		assert(pe != NULL);
+
+		if(iterations == 0)
+			iterations = 1;
+		
+		printf("\n\033[3;32mrandom_ordering\033[0;37m using \033[3;32m%d\033[0;37m threads.\n", pe->threads_count);
+
+	// (1.2) Memory allocation
+		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
+		assert(ttimes != NULL);
+
+		unsigned int* RA_o2n = numa_alloc_interleaved(sizeof(unsigned int) * vertices_count);
+		unsigned int* it_o2n = numa_alloc_interleaved(sizeof(unsigned int) * vertices_count);
+		unsigned int* vertex_selected = numa_alloc_interleaved(sizeof(unsigned int) * vertices_count);
+		assert(RA_o2n != NULL && it_o2n != NULL && vertex_selected != NULL);
+
+		#pragma omp parallel for
+		for(unsigned int v = 0; v < vertices_count; v++)
+		{
+			it_o2n[v] = -1U;
+			RA_o2n[v] = v;
+			vertex_selected[v] = 0;
+		}
+
+	// (2) iterations
+		for(unsigned int i = 0; i < iterations; i++)
+		{
+			unsigned long t1 = - get_nano_time();
+
+			// (2.1) Creating the new random relabeling array in it_o2n
+			#pragma omp parallel
+			{
+				unsigned int tid = omp_get_thread_num();
+
+				unsigned int w_start = tid * (vertices_count / pe->threads_count);
+				unsigned int w_end = (tid + 1) * (vertices_count / pe->threads_count);
+				if(tid == pe->threads_count - 1)
+					w_end = vertices_count;
+				unsigned int w_length = w_end - w_start;
+				unsigned int counter = 0;
+
+				// Random seed Using splitmix64 (https://prng.di.unimi.it/splitmix64.c) to fill the seeds 
+					unsigned long s[4];
+					rand_initialize_splitmix64(s, pe->threads_count * (i + 1) * get_nano_time() + tid);
+
+				// Iterating over vertices
+				for(unsigned int v = 0; v < vertices_count; v++)
+				{
+					if(vertex_selected[v] == i + 1)
+						continue;
+
+					if(!__sync_bool_compare_and_swap(&vertex_selected[v], i, i + 1))
+						continue;
+
+					unsigned int index = w_start + rand_xoshiro256(s) % w_length;
+					while(it_o2n[index] != -1U)
+					{
+						index++;
+						if(index >= w_end)
+							index = w_start;
+					}
+
+					it_o2n[index] = v;
+
+					counter++;
+					if(counter >= .9 * w_length)
+						break;
+
+					v += rand_xoshiro256(s) % pe->threads_count;
+				}
+
+				unsigned int last_index = w_start;
+
+				for(unsigned int v = 0; v < vertices_count; v++)
+				{
+					if(vertex_selected[v] == i + 1)
+						continue;
+
+					if(!__sync_bool_compare_and_swap(&vertex_selected[v], i, i + 1))
+						continue;
+
+					while(it_o2n[last_index] != -1U)
+					{
+						last_index++;
+						assert(last_index != w_end);
+					}
+
+					it_o2n[last_index] = v;
+
+					counter++;
+					if(counter == w_length)
+						break;
+				}
+			}
+
+			// #ifndef NDEBUG 
+			// 	#pragma omp parallel for
+			// 	for(unsigned int v = 0; v < vertices_count; v++)
+			// 		assert(it_o2n[v] != -1U && vertex_selected[v] == i+1);
+
+			// 	assert(1 == relabeling_array_validate(pe, it_o2n, vertices_count));
+			// #endif
+
+			// (2.2) Setting RA_o2n 
+			#pragma omp parallel for
+			for(unsigned int v = 0; v < vertices_count; v++)
+			{
+				unsigned int prev_map = RA_o2n[v];
+				assert(it_o2n[prev_map] != -1U);
+			
+				RA_o2n[v] = it_o2n[prev_map];
+				it_o2n[prev_map] = -1U;
+			}
+
+			t1 += get_nano_time();
+			printf("  Iteration %u finished in %'.1f milliseconds.\n", i, t1 / 1e6);
+
+			if(call_back)
+				call_back(RA_o2n, i);
+		}
+
+	// Releasing mem
+		numa_free(it_o2n, sizeof(unsigned int) * vertices_count);
+		numa_free(vertex_selected, sizeof(unsigned int) * vertices_count);
+		it_o2n = NULL;
+		vertex_selected = NULL;
+
+	// Finalizing
+		t0 += get_nano_time();
+		printf("Execution time: %'10.1f (ms)\n\n", t0/1e6);
+
+	return RA_o2n;
+}
+
+
 #endif
