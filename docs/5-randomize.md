@@ -26,10 +26,12 @@ The results for some graphs are in the following.
 
 *Note:* the algorithm has been run on graphs containing outgoing edges of each vertex.
 
-![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-sk.png)
-![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-ms50.png)
-![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-eu15.png)
-![](https://hpgp.net/LaganLighter/outputs/alg4/alg4-wdc12.png)
+![GB Roads](https://hpgp.net/LaganLighter/outputs/alg4/alg4-gb-rd.png)
+![SK-Domains](https://hpgp.net/LaganLighter/outputs/alg4/alg4-sk.png)
+![Graph500 Synthetic Graph](https://hpgp.net/LaganLighter/outputs/alg4/alg4-g500.png)
+![MS-BioGraphs MS50](https://hpgp.net/LaganLighter/outputs/alg4/alg4-ms50.png)
+![EU 2015](https://hpgp.net/LaganLighter/outputs/alg4/alg4-eu15.png)
+![Web Data Common 2012](https://hpgp.net/LaganLighter/outputs/alg4/alg4-wdc12.png)
 
 The algorithm has been executed on a machine with two AMD 7401 CPUs, 128 cores, 128 threads. 
 The report created by the [`launcher`](4-launcher.md) is in the following.  
