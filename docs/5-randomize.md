@@ -20,7 +20,8 @@ degree distribution of Neighbor to Neighbor Average ID Distance (**N2N AID**)
 is created. Also, after each iteration of `random_ordering()` the N2N AID distribution
 is plotted. This shows the impacts of randomization.
 
-The complete results for all graphs can be seen in [this PDF file](hpgp.net/LaganLighter/outputs/alg4/alg4_randomize.pdf).
+The complete results for all graphs can be seen in 
+[this PDF file](https:/hpgp.net/LaganLighter/outputs/alg4/alg4_randomize.pdf).
 The results for some graphs are in the following.
 
 *Note:* the algorithm has been run on graphs containing outgoing edges of each vertex.
