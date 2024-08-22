@@ -7,7 +7,7 @@ the [launcher](../launcher.sh) script is used.
 
   - **alg**=algorithm-filename (with or without .c)`
   - **df**=path/to/datasets/folder (default ./data)
-  - **make-flags**="flags (e.g. no_ht=1) to be passed to the `make`, separated by space, and put in double quotes" (default empty)
+  - **make-flags**="flags (e.g. `no_ht=1`, `debug=1`, and/or `wait_passive=1`) to be passed to the `make`, separated by space, and put in double quotes" (default empty)
   - **program-args**="arguemnts to be passed to the `program` by `make`, separated by space, and put in double quotes" (default empty)
   - **sf=m** (start from dataset m, default: 0, i.e., all datasets are processed)
   - **sa=n** (stop after processing dataset n, default: -1, i.e., all datasets are processed)

@@ -37,9 +37,9 @@ Please refer to [LaganLighter Documentation](docs/readme.md)
 LaganLighter supports reading graphs in *text* format and in compressed *[WebGraph](https://webgraph.di.unimi.it/)* format, using
 [ParaGrapher](https://github.com/MohsenKoohi/ParaGrapher) library, 
 particularly:
-  - **`PARAGRAPHER_CSX_WG_400_AP`**, 
-  - **`PARAGRAPHER_CSX_WG_404_AP`**, and
-  - **`PARAGRAPHER_CSX_WG_800_AP`** .
+  - *`PARAGRAPHER_CSX_WG_400_AP`*, 
+  - *`PARAGRAPHER_CSX_WG_404_AP`*, and
+  - *`PARAGRAPHER_CSX_WG_800_AP`* .
 
 Please refer to [Graph Loading Documentation](docs/3-loading.md).
 
