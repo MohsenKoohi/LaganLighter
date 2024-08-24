@@ -182,8 +182,7 @@ function ul2s()
 	datasets=""
 	c=0
 	while IFS= read -r line; do
-		
-		if [[ $c < $SF ]]; then
+		if [ $c -lt $SF ]; then
 			c=`echo "$c+1"|bc`
 			continue
 		fi
@@ -195,14 +194,14 @@ function ul2s()
 		unset ul2s_out
 		datasets="$datasets $ds"
 
-		if [ $SA == $c ]; then
+		if [ $SA -eq $c ]; then
 			break
 		fi
 		c=`echo "$c+1"|bc`
 		
 	done <<< "$sorted_datasets"
 
-	if [ $LD == "1" ]; then
+	if [ $LD -eq "1" ]; then
 		echo -e "\n"
 		exit
 	fi
