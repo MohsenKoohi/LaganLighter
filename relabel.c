@@ -682,5 +682,217 @@ unsigned int* random_ordering(struct par_env* pe, unsigned int vertices_count, i
 	return RA_o2n;
 }
 
+/*
+	relabel_graph() 
+
+	flags: 
+		bit 0 : TODO: validate results
+		bit 1 : sort neighbour-list of the output  
+*/
+
+struct ll_400_graph* relabel_graph(struct par_env* pe, struct ll_400_graph* g, unsigned int* RA_o2n, unsigned int flags)
+{
+	// Initial checks
+		unsigned long tt = - get_nano_time();
+		assert(pe != NULL && g != NULL && RA_o2n != NULL);
+		assert(relabeling_array_validate(pe, RA_o2n, g->vertices_count));
+		printf("\n\033[3;35mrelabel_graph\033[0;37m using \033[3;35m%d\033[0;37m threads.\n", pe->threads_count);
+
+	// Partitioning
+		unsigned int thread_partitions = 64;
+		unsigned int partitions_count = pe->threads_count * thread_partitions;
+		printf("partitions: %'u \n", partitions_count);
+		unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
+		assert(partitions != NULL);
+		parallel_edge_partitioning(g, partitions, partitions_count);
+		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
+
+	// Allocating memory
+		struct ll_400_graph* out_graph =calloc(sizeof(struct ll_400_graph),1);
+		assert(out_graph != NULL);
+		out_graph->vertices_count = g->vertices_count;
+		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + g->vertices_count));
+		assert(out_graph->offsets_list != NULL);
+
+		unsigned long* partitions_total_edges = calloc(sizeof(unsigned long), partitions_count);
+		assert(partitions_total_edges != NULL);
+
+		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
+		assert(ttimes != NULL);
+
+	// (1) Identifying degree of vertices in the out_graph
+		unsigned long mt = - get_nano_time();
+		#pragma omp parallel  
+		{
+			unsigned int tid = omp_get_thread_num();
+			ttimes[tid] = - get_nano_time();
+			#pragma omp for nowait 
+			for(unsigned int p = 0; p<partitions_count; p++)
+			{
+				for(unsigned int v = partitions[p]; v < partitions[p + 1]; v++)
+				{
+					unsigned int degree = g->offsets_list[v + 1] - g->offsets_list[v];
+					unsigned int new_v = RA_o2n[v];
+					out_graph->offsets_list[new_v] = degree; 
+				}
+			}
+			ttimes[tid] += get_nano_time();
+		}
+		mt += get_nano_time();
+		PTIP("(1) Identifying degrees");
+		
+	// (2) Calculating sum of edges of each partition in partitions_total_edges
+		mt = - get_nano_time();
+		#pragma omp parallel  
+		{
+			unsigned int tid = omp_get_thread_num();
+			ttimes[tid] = - get_nano_time();
+			#pragma omp for nowait 
+			for(unsigned int p = 0; p<partitions_count; p++)
+			{
+				unsigned long sum = 0;
+				for(unsigned int v = partitions[p]; v < partitions[p + 1]; v++)
+					sum += out_graph->offsets_list[v];
+				partitions_total_edges[p] = sum;
+			}
+			ttimes[tid] += get_nano_time();
+		}
+		mt += get_nano_time();
+		PTIP("(2) Calculating sum");
+	
+	// Partial sum of partitions_total_edges
+		{
+			unsigned long sum = 0;
+			for(unsigned int p = 0; p < partitions_count; p++)
+			{
+				unsigned long temp = partitions_total_edges[p];
+				partitions_total_edges[p] = sum;
+				sum += temp;
+			}
+			out_graph->edges_count = sum;
+			printf("%-20s \t\t\t %'10lu\n","New graph edges:", out_graph->edges_count);
+			assert(out_graph->edges_count == g->edges_count);
+		}
+		out_graph->offsets_list[out_graph->vertices_count] = out_graph->edges_count;
+		out_graph->edges_list = numa_alloc_interleaved(sizeof(unsigned int) * out_graph->edges_count);
+		assert(out_graph->edges_list != NULL);
+
+	// (3) Updating the out_graph->offsets_list
+		mt = - get_nano_time();
+		#pragma omp parallel  
+		{
+			unsigned int tid = omp_get_thread_num();
+			ttimes[tid] = - get_nano_time();
+			#pragma omp for nowait 
+			for(unsigned int p = 0; p<partitions_count; p++)
+			{
+				unsigned long current_offset = partitions_total_edges[p];
+				for(unsigned int v = partitions[p]; v < partitions[p + 1]; v++)
+				{
+					unsigned long v_degree = out_graph->offsets_list[v];
+					out_graph->offsets_list[v] = current_offset;
+					current_offset += v_degree;
+				}
+
+				if(p + 1 < partitions_count)
+					assert(current_offset == partitions_total_edges[p + 1]);
+				else
+					assert(current_offset == out_graph->edges_count);
+			}
+			ttimes[tid] += get_nano_time();
+		}
+		mt += get_nano_time();
+		PTIP("(3) Update offsets_list");	
+
+	// out_graph partitioning
+		unsigned int* out_partitions = calloc(sizeof(unsigned int), partitions_count+1);
+		assert(out_partitions != NULL);
+		parallel_edge_partitioning(out_graph, out_partitions, partitions_count);
+		
+	// (4) Writing edges
+		mt = - get_nano_time();
+		#pragma omp parallel  
+		{
+			unsigned int tid = omp_get_thread_num();
+			ttimes[tid] = - get_nano_time();
+			unsigned int partition = -1U;
+				
+			while(1)
+			{
+				partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+				if(partition == -1U)
+					break; 
+				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
+				{
+					unsigned int new_v = RA_o2n[v];
+					unsigned long new_e = out_graph->offsets_list[new_v];
+
+					for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v + 1]; e++)
+					{
+						out_graph->edges_list[new_e] = RA_o2n[g->edges_list[e]];
+						new_e++;
+					}
+
+					assert(new_e == out_graph->offsets_list[new_v+1]);
+				}
+			}
+			ttimes[tid] += get_nano_time();
+		}
+		mt += get_nano_time();
+		dynamic_partitioning_reset(dp);
+		PTIP("(4) Writing edges");
+
+	// (5) Sorting
+		if((flags & 2U))
+		{	
+			mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				unsigned int partition = -1U;	
+				while(1)
+				{
+					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+					if(partition == -1U)
+						break; 
+					for(unsigned int v = out_partitions[partition]; v < out_partitions[partition + 1]; v++)
+					{
+						unsigned int degree = out_graph->offsets_list[v+1] - out_graph->offsets_list[v];
+						if(degree < 2)
+							continue;
+						quick_sort_uint(&out_graph->edges_list[out_graph->offsets_list[v]], 0, degree - 1);
+					}
+				}
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			dynamic_partitioning_reset(dp);
+			PTIP("(5) Sorting");
+		}
+
+	// Releasing memory
+		free(partitions);
+		partitions = NULL;
+
+		free(out_partitions);
+		out_partitions = NULL;
+
+		dynamic_partitioning_release(dp);
+		dp = NULL;
+
+		free(partitions_total_edges);
+		partitions_total_edges = NULL;
+
+		free(ttimes);
+		ttimes = NULL;
+
+	// Finalizing
+		tt += get_nano_time();
+		printf("%-20s \t\t\t %'.3f (s)\n\n","Total time:", tt/1e9);
+		print_ll_400_graph(out_graph);
+		
+	return out_graph;
+}
 
 #endif
