@@ -20,7 +20,7 @@ function ul2s()
 	else if [ `echo "$in > 10^6" | bc` == 1 ]; then 
 		ul2s_out=`echo "scale=3; $in/10^6" | bc`"M"
 	else if [ `echo "$in > 10^3" | bc` == 1 ]; then 
-		ul2s_out=`echo "scale=3; $in/10^3 | bc"`"k"
+		ul2s_out=`echo "scale=3; $in/10^3" | bc`"k"
 	else 
 		ul2s_out=$in
 	fi fi fi fi fi fi fi
@@ -133,24 +133,29 @@ function ul2s()
 	initial_datasets=(`(cd $DF; ls $dataset_patterns)`)
 	datasets=""
 	dataset_edges=""
+	dataset_vertices=""
 	for (( i=0; i <  ${#initial_datasets[@]}; i++)); do
 		ds=${initial_datasets[$i]}
 		suffix=`echo $ds | rev | cut -f1 -d. | rev`
 		edges_count=0
+		vertices_count=0
 		
 		if [ $suffix == "txt" ]; then
 			edges_count=`head "$DF/$ds" -n2 | tail -n1`
+			vertices_count=`head "$DF/$ds" -n1`
 		fi
 
 		if [ $suffix == "graph" ]; then
 			prop_file=`echo $ds | sed 's/\(.*\)\.graph/\1\.properties/'`
 			edges_count=`cat "$DF/$prop_file" | grep -P "\barcs[\s]*=" | cut -f2 -d= | xargs`
+			vertices_count=`cat "$DF/$prop_file" | grep -P "\bnodes[\s]*=" | cut -f2 -d= | xargs`
 		fi
 
 		if [ $suffix == "labels" ]; then
 			laebls_prop_file=`echo $ds | sed 's/\(.*\)\.labels/\1\.properties/'`
 			prop_file=`cat "$DF/$laebls_prop_file" | grep -P "underlyinggraph[\s]*=" | cut -f2 -d=|xargs`".properties"
 			edges_count=`cat "$DF/$prop_file" | grep -P "\\barcs=" | cut -f2 -d=`
+			edges_count=`cat "$DF/$prop_file" | grep -P "\\bnodes=" | cut -f2 -d=`
 		fi
 
 		if [ `echo $edges_count |  tr -cd ' \t' | wc -c ` != 0 ]; then
@@ -168,16 +173,18 @@ function ul2s()
 
 		datasets="$datasets $ds"
 		dataset_edges="$dataset_edges $edges_count"
+		dataset_vertices="$dataset_vertices $vertices_count"
 
-		# echo $i $ds $suffix $edges_count;
+		# echo $i $ds $suffix $edges_count $vertices_count;
 	done	
 
 	datasets=($datasets);
 	dataset_edges=($dataset_edges);
+	dataset_vertices=($dataset_vertices);
 
 	sorted_datasets=`for (( i=0; i < ${#datasets[@]}; i++)); do
-		echo ${datasets[$i]} ${dataset_edges[$i]}
-	done | sort -n -k2`
+		echo ${datasets[$i]} ${dataset_vertices[$i]} ${dataset_edges[$i]}
+	done | sort -n -k3`
 
 	datasets=""
 	c=0
@@ -188,10 +195,14 @@ function ul2s()
 		fi
 
 		ds=`echo $line|cut -f1 -d' '`
-		ec=`echo $line|cut -f2 -d' '`
+		vc=`echo $line|cut -f2 -d' '`
+		ec=`echo $line|cut -f3 -d' '`
+		ul2s $vc
+		vc_out=$ul2s_out
 		ul2s $ec
-		echo "  $c- $ds, |E|: $ul2s_out "
-		unset ul2s_out
+		ec_out=$ul2s_out
+		printf "  %2d- %-30s, |V|: %10s, |E|: %10s\n" $c $ds $vc_out $ul2s_out
+		unset vc_out ec_out ul2s_out 
 		datasets="$datasets $ds"
 
 		if [ $SA -eq $c ]; then
