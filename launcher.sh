@@ -231,7 +231,7 @@ function ul2s()
 	mkdir -p $log_folder
 	echo "  Log Folder: "$log_folder
 	report_path=$log_folder/report.txt
-	echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\nTime: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" > $report_path
+	echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\nStarted on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" > $report_path
 	echo "  Report file: "$report_path
 	echo
 
@@ -277,6 +277,8 @@ function ul2s()
 		
 		c=`echo "$c+1"|bc`
 	done
+
+	echo -e "\nFinished on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" >> $report_path
 
 # Post processing actions 
 	if [ $SHM_DELETE == 1 ]; then 
