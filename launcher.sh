@@ -130,7 +130,7 @@ function ul2s()
 		dataset_patterns="$dataset_patterns *.labels"
 	fi
 
-	initial_datasets=(`(cd $DF; ls $dataset_patterns)`)
+	initial_datasets=(`(cd $DF; ls $dataset_patterns 2>/dev/null )`)
 	datasets=""
 	dataset_edges=""
 	dataset_vertices=""
@@ -147,6 +147,7 @@ function ul2s()
 
 		if [ $suffix == "graph" ]; then
 			prop_file=`echo $ds | sed 's/\(.*\)\.graph/\1\.properties/'`
+			[ ! -e $DF/$prop_file ] && continue
 			edges_count=`cat "$DF/$prop_file" | grep -P "\barcs[\s]*=" | cut -f2 -d= | xargs`
 			vertices_count=`cat "$DF/$prop_file" | grep -P "\bnodes[\s]*=" | cut -f2 -d= | xargs`
 		fi
@@ -154,6 +155,7 @@ function ul2s()
 		if [ $suffix == "labels" ]; then
 			laebls_prop_file=`echo $ds | sed 's/\(.*\)\.labels/\1\.properties/'`
 			prop_file=`cat "$DF/$laebls_prop_file" | grep -P "underlyinggraph[\s]*=" | cut -f2 -d=|xargs`".properties"
+			[ ! -e $DF/$prop_file ] && continue
 			edges_count=`cat "$DF/$prop_file" | grep -P "\\barcs=" | cut -f2 -d=`
 			edges_count=`cat "$DF/$prop_file" | grep -P "\\bnodes=" | cut -f2 -d=`
 		fi
