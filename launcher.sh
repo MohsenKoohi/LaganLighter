@@ -164,14 +164,9 @@ function ul2s()
 			edges_count=0;
 		fi
 
-		if [ ! -n "$edges_count" ]; then
-			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize."
-			continue;
-		fi
-		if [ $edges_count == "0" ]; then
-			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize."
-			continue;
-		fi
+		[[ ! -n "$edges_count" || $edges_count == "0" ]] &&
+			echo -e "  \033[0;31mError\033[0;37m: dataset \"$DF/$ds\" did not recognize." &&
+			continue
 
 		datasets="$datasets $ds"
 		dataset_edges="$dataset_edges $edges_count"
