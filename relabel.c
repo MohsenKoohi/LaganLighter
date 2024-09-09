@@ -895,4 +895,85 @@ struct ll_400_graph* relabel_graph(struct par_env* pe, struct ll_400_graph* g, u
 	return out_graph;
 }
 
+unsigned int* get_create_fixed_random_ordering(struct par_env* pe, char* graph_basename, unsigned int vertices_count, int iterations)
+{
+	// Creating the folder, if does not exist
+	{
+		struct stat st = {0};
+		if (stat(LL_GRAPH_RA_BIN_FOLDER, &st) == -1)
+			mkdir(LL_GRAPH_RA_BIN_FOLDER, 0700);
+	}
+
+	// Identifying the file
+	char* file_name = malloc(PATH_MAX);
+	assert(file_name != NULL);
+	sprintf(file_name, "%s/%s_RND_%u.bin", LL_GRAPH_RA_BIN_FOLDER, graph_basename, iterations);
+	unsigned long file_size = sizeof(unsigned int) * vertices_count;
+
+	// Creating the file
+	if(access(file_name, F_OK) != 0)
+	{
+		unsigned int* RA = random_ordering(pe, vertices_count, iterations, NULL);
+		assert(RA != NULL);
+
+		int fd=open(file_name, O_RDWR|O_CREAT|O_TRUNC, 0600);
+		if(fd < 0)
+		{
+			printf("Can't open the file, %d, %s\n",errno, strerror(errno));
+			return NULL;
+		}
+
+		if(ftruncate(fd, file_size)!=0)
+		{
+			printf("Can't truncate the file, %d, %s\n",errno, strerror(errno));
+			return NULL;	
+		}
+
+		unsigned int* stored_RA = mmap(
+			NULL
+			, file_size
+			, PROT_READ|PROT_WRITE
+			, MAP_SHARED
+			, fd
+			, 0
+		);
+		if(stored_RA == MAP_FAILED)
+		{
+			printf("Can't mmap the file, %d, %s\n",errno, strerror(errno));
+			return NULL;	
+		}
+
+		#pragma omp parallel for
+		for(unsigned int v = 0; v < vertices_count; v++)
+			stored_RA[v] = RA[v];
+
+		int ret = msync(stored_RA, file_size, MS_SYNC);
+		assert(ret == 0);
+
+		munmap(stored_RA, file_size);
+
+		close(fd);
+		fd = -1;
+	}
+
+	// Loading the array
+	int fd=open(file_name, O_RDONLY);
+	assert(fd > 0);
+
+	unsigned int* RA = mmap(
+		NULL
+		, file_size
+		, PROT_READ 
+		, MAP_SHARED
+		, fd
+		, 0
+	);
+	assert(RA != MAP_FAILED);
+
+	free(file_name);
+	file_name = NULL;
+
+	return RA;
+}
+		
 #endif

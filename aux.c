@@ -50,6 +50,7 @@ unsigned int LL_INPUT_GRAPH_BATCH_ORDER = 0;
 unsigned int LL_INPUT_GRAPH_IS_SYMMETRIC = 0;
 unsigned int LL_STORE_INPUT_GRAPH_IN_SHM = 0;
 char* LL_OUTPUT_REPORT_PATH = NULL;
+char* LL_GRAPH_RA_BIN_FOLDER = "data/RA_bin_arrays";
 
 void read_env_vars()
 {
@@ -106,6 +107,10 @@ void read_env_vars()
 	if(temp != NULL && strlen(temp) > 0)
 		LL_OUTPUT_REPORT_PATH = temp;
 
+	temp = getenv("LL_GRAPH_RA_BIN_FOLDER");
+	if(temp != NULL)
+		LL_GRAPH_RA_BIN_FOLDER = temp;
+
 	printf("\n\033[2;32mEnv Vars:\n\033[0;37m");
 	printf("    LL_INPUT_GRAPH_PATH:         %s\n", LL_INPUT_GRAPH_PATH);
 	printf("    LL_INPUT_GRAPH_BASE_NAME:    %s\n", LL_INPUT_GRAPH_BASE_NAME);
@@ -114,6 +119,7 @@ void read_env_vars()
 	printf("    LL_INPUT_GRAPH_IS_SYMMETRIC: %u\n", LL_INPUT_GRAPH_IS_SYMMETRIC);
 	printf("    LL_STORE_INPUT_GRAPH_IN_SHM: %u\n", LL_STORE_INPUT_GRAPH_IN_SHM);
 	printf("    LL_OUTPUT_REPORT_PATH:       %s\n", LL_OUTPUT_REPORT_PATH);
+	printf("    LL_GRAPH_RA_BIN_FOLDER:      %s\n", LL_GRAPH_RA_BIN_FOLDER);
 	
 	return;
 }
