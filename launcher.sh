@@ -53,7 +53,7 @@ function ul2s()
 		ALG=`echo $ALG | cut -f1 -d.`;
 	fi
 	if [ ! -e "$ALG.c" ]; then 
-		echo "  \033[0;31mError:\033[0;37m File \"$ALG.c\" does not exist.";
+		echo -e "  \033[0;31mError:\033[0;37m File \"$ALG.c\" does not exist.";
 		exit 1;
 	fi
 	echo "  Algorithm: $ALG"
@@ -108,7 +108,7 @@ function ul2s()
 
 	if [ ! -e $DF ]; 
 	then
-		echo "  \033[0;31mError:\033[0;37m Datasets folder \"$DF\" does not exist.";
+		echo -e "  \033[0;31mError:\033[0;37m Datasets folder \"$DF\" does not exist.";
 		exit 2;
 	fi;
 	

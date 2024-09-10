@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This script is called to remove storage data that are cached by OS while loading the graph
 #
@@ -15,24 +15,24 @@
 # If none of the script exist, `flushcache` file in `paragrapher/test` is called
 # which may take a longer time to finish
 
-COMMS="
+COMMS=`echo -e "
 	/drop_caches.sh
 	/var/shared/power/bin/flushcache.sh
-	`realpath ~`/Programs/scripts/drop_caches.sh
-"
+	/opt/service/bin/dropcache both
+	$(realpath ~)/Programs/scripts/drop_caches.sh
+"`
 
-for c in $COMMS; do
-	if [ -f $c ]; then
+while IFS= read -r c; do
+	c=`echo "$c" | xargs`
+	[ -z "$c" ] && continue
+	file=`echo "$c"|cut -f1 -d' '`
+	if [ -f $file ]; then
 		$c
-		if [ $? = 0 ]; then
-			exit
-		fi
+		[ $? = 0 ] && exit
 
 		sudo $c
-		if [ $? = 0 ]; then
-			exit
-		fi
+		[ $? = 0 ] && exit
 	fi
-done
-
+done <<< $COMMS
+exit
 make flushcache -C paragrapher/test
