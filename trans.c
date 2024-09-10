@@ -18,6 +18,223 @@
 #include "partitioning.c"
 
 
+void sort_neighbor_lists(struct par_env* pe, struct ll_400_graph* g)
+{
+	assert(pe != NULL && g!= NULL);
+
+	// Allocating mem
+		unsigned int thread_partitions = 64;
+		unsigned int partitions_count = pe->threads_count * thread_partitions;	
+		unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
+		assert(partitions != NULL);
+		parallel_edge_partitioning(g, partitions, partitions_count);
+		
+		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
+		assert(ttimes != NULL);
+
+		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
+
+	// Sorting
+	unsigned long mt = - get_nano_time();
+	#pragma omp parallel  
+	{
+		unsigned int tid = omp_get_thread_num();
+		ttimes[tid] = - get_nano_time();
+		unsigned int partition = -1U;	
+		while(1)
+		{
+			partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+			if(partition == -1U)
+				break; 
+			for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
+			{
+				unsigned int degree = g->offsets_list[v+1] - g->offsets_list[v];
+				if(degree < 2)
+					continue;
+				quick_sort_uint(&g->edges_list[g->offsets_list[v]], 0, degree - 1);
+			}
+		}
+		ttimes[tid] += get_nano_time();
+	}
+	mt += get_nano_time();
+	PTIP("Sorting");
+
+	// Releasing mem
+		free(partitions);
+		partitions = NULL;
+		free(ttimes);
+		ttimes = NULL;
+		dynamic_partitioning_release(dp);
+		dp = NULL;
+
+	return;	
+}
+
+/*
+	Validates the transposition of `g` to `t`
+	returns `1` as true, and `0` as false
+
+	`flags`:
+		bit 0: no self-edges
+*/
+int validate_transposition(struct par_env* pe, struct ll_400_graph* g, struct ll_400_graph* t, unsigned int flags)
+{
+	assert(pe != NULL && g != NULL && t != NULL);
+
+	// Allocating mem
+		unsigned int thread_partitions = 64;
+		unsigned int partitions_count = pe->threads_count * thread_partitions;	
+		unsigned int* g_partitions = calloc(sizeof(unsigned int), partitions_count+1);
+		assert(g_partitions != NULL);
+		parallel_edge_partitioning(g, g_partitions, partitions_count);
+
+		unsigned int* t_partitions = calloc(sizeof(unsigned int), partitions_count+1);
+		assert(t_partitions != NULL);
+		parallel_edge_partitioning(t, t_partitions, partitions_count);
+		
+		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
+		assert(ttimes != NULL);
+
+		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
+		int ret = 1;
+
+	// Validation
+		// Initial checks
+			assert(t->vertices_count == g->vertices_count);
+			assert(t->offsets_list[0] == 0);
+			assert(t->offsets_list[t->vertices_count] == t->edges_count);
+			assert(t->edges_count <= g->edges_count);
+
+		// Check if `g` is sorted
+			unsigned long mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				unsigned long thread_se = 0;
+				unsigned int partition = -1U;
+				while(1)
+				{
+					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+					if(partition == -1U)
+						break; 
+					for(unsigned int v = g_partitions[partition]; v < g_partitions[partition + 1]; v++)		
+						for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v + 1]; e++)
+							if(e < (g->offsets_list[v + 1] - 1))
+								if(g->edges_list[e] >= g->edges_list[e + 1])
+								{
+									printf("v:%'u,  deg:%'lu,  eo:%'lu,  neighbour: %'u,  next-neighbour: %'u\n", v, g->offsets_list[v+1] - g->offsets_list[v], e, g->edges_list[e], g->edges_list[e+1]);
+									assert(g->edges_list[e] < g->edges_list[e + 1] && "The input graph does not have sorted neighbour-lists");
+									ret = 0;
+								}
+				}
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			dynamic_partitioning_reset(dp);
+			PTIP("Validation 1, check input is sorted");
+			if(!ret)
+				goto validate_transposition_rel_mem;
+
+		// If an edge is in `t` it should be in `g`
+			mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				unsigned int partition = -1U;
+				while(1)
+				{
+					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+					if(partition == -1U)
+						break; 
+					for(unsigned int v = t_partitions[partition]; v < t_partitions[partition + 1]; v++)
+					{
+						assert(t->offsets_list[v+1] >= t->offsets_list[v]);
+						for(unsigned long e = t->offsets_list[v]; e < t->offsets_list[v + 1]; e++)
+						{
+							unsigned int dest = v;
+							unsigned int src = t->edges_list[e];
+
+							if((flags & 1U) && src == dest)
+							{
+								printf("Validation 1 error: src == dest %'u->%'u\n", src, dest);
+								assert(dest != src);
+								ret = 0;
+							}
+
+							unsigned long found = uint_binary_search(g->edges_list, g->offsets_list[src], g->offsets_list[src + 1], dest);
+							if(found == -1UL)
+							{
+								printf("Validation 1 error: cannot find %'u->%'u\n", src, dest);
+								assert(found != -1UL);
+								ret = 0;
+							}
+						}					
+					}
+				}
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			dynamic_partitioning_reset(dp);
+			PTIP("Validation 2, output includes all edges of the input");
+			if(!ret)
+				goto validate_transposition_rel_mem;
+
+		// If an edge is in `g` it should be in `t` for both endpoints 
+			mt = - get_nano_time();
+			#pragma omp parallel  
+			{
+				unsigned int tid = omp_get_thread_num();
+				ttimes[tid] = - get_nano_time();
+				unsigned int partition = -1U;
+				while(1)
+				{
+					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
+					if(partition == -1U)
+						break; 
+					for(unsigned int v = g_partitions[partition]; v < g_partitions[partition + 1]; v++)
+						for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v + 1]; e++)
+						{
+							unsigned int src = v;
+							unsigned int dest = g->edges_list[e];
+
+							if((flags & 1U) && src == dest)
+								continue;
+
+							unsigned long found = uint_binary_search(t->edges_list, t->offsets_list[dest], t->offsets_list[dest + 1], src);
+							if(found == -1UL)
+							{
+								printf("Validation 2 error: cannot find %'u->%'u\n", src, dest);
+								assert(found != -1UL);
+								ret = 0;
+							}
+						}	
+				}
+				ttimes[tid] += get_nano_time();
+			}
+			mt += get_nano_time();
+			dynamic_partitioning_reset(dp);
+			PTIP("Validation 3, input includes all edges of the output");
+
+	// Releasing mem
+	validate_transposition_rel_mem:
+
+		free(t_partitions);
+		t_partitions = NULL;
+
+		free(g_partitions);
+		g_partitions = NULL;
+		
+		free(ttimes);
+		ttimes = NULL;
+		
+		dynamic_partitioning_release(dp);
+		dp = NULL;
+
+	return ret;	
+}
+
 /*
 	The input graph should have sorted neighbour-lists as binary search is 
 	used in order to check if a reverse edges exists.
@@ -29,7 +246,7 @@
 	We assign a bit for each edge to specify if this edge is symmetric or not. 
 	Using this bit array we do not repeat the search in Step 5.
 	
-	A faster version can rewrites all edges without searching for repeated edges 
+	A faster version can rewrite all edges without searching for repeated edges 
 	(i.e., we need dynamic memory for neighbour lists of each vertex), 
 	but then after sorting we can remove repeated edges and rewrite the offsets list and filtered edges list.
 	This requires more memory, but is faster. 
@@ -46,14 +263,14 @@
 	bit 1 : sort neighbour-list of the output  
 	bit 2 : remove self-edges
 */
-struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsigned int flags)
+struct ll_400_graph* symmetrize_graph(struct par_env* pe, struct ll_400_graph* in_graph, unsigned int flags)
 {
 	// Initial checks
 		unsigned long tt = - get_nano_time();
-		assert(pe != NULL && csr != NULL);
-		printf("\n\033[3;35mcsr2sym\033[0;37m using \033[3;35m%d\033[0;37m threads.\n", pe->threads_count);
+		assert(pe != NULL && in_graph != NULL);
+		printf("\n\033[3;35msymmetrize_graph\033[0;37m using \033[3;35m%d\033[0;37m threads.\n", pe->threads_count);
 		unsigned long free_mem = get_free_mem();
-		if(free_mem < csr->edges_count * sizeof(unsigned int) + csr->vertices_count * sizeof(unsigned long))
+		if(free_mem < in_graph->edges_count * sizeof(unsigned int) + in_graph->vertices_count * sizeof(unsigned long))
 		{
 			printf("Not enough memory.\n");
 			return NULL;
@@ -62,23 +279,22 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 	// Partitioning
 		unsigned int thread_partitions = 64;
 		unsigned int partitions_count = pe->threads_count * thread_partitions;
-		printf("\033[3;35mCSR\033[0;37m partitioning, partitions: %'u \n", partitions_count);
 		unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
 		assert(partitions != NULL);
-		parallel_edge_partitioning(csr, partitions, partitions_count);
+		parallel_edge_partitioning(in_graph, partitions, partitions_count);
 		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
 
 	// Allocating memory
 		struct ll_400_graph* out_graph =calloc(sizeof(struct ll_400_graph),1);
 		assert(out_graph != NULL);
-		out_graph->vertices_count = csr->vertices_count;
-		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + csr->vertices_count));
+		out_graph->vertices_count = in_graph->vertices_count;
+		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + in_graph->vertices_count));
 		assert(out_graph->offsets_list != NULL);
 
-		unsigned long* last_offsets = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + csr->vertices_count));
+		unsigned long* last_offsets = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + in_graph->vertices_count));
 		assert(last_offsets != NULL);
 
-		unsigned char* edge_is_symmetric = numa_alloc_interleaved(sizeof(unsigned char) * ( 1 + csr->edges_count / 8));
+		unsigned char* edge_is_symmetric = numa_alloc_interleaved(sizeof(unsigned char) * ( 1 + in_graph->edges_count / 8));
 		assert(edge_is_symmetric != NULL);
 
 		unsigned long* partitions_total_edges = calloc(sizeof(unsigned long), partitions_count);
@@ -102,21 +318,21 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 					break; 
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)		
 				{
-					long degree = csr->offsets_list[v+1] - csr->offsets_list[v];
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+					long degree = in_graph->offsets_list[v+1] - in_graph->offsets_list[v];
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 					{
 						if(flags & 4U)  // remove self edges
-							if(csr->edges_list[e] == v)
+							if(in_graph->edges_list[e] == v)
 							{
 								self_edges++;
 								degree--;
 							}
 
-						if(e < (csr->offsets_list[v + 1] - 1))
-							if(csr->edges_list[e] >= csr->edges_list[e + 1])
+						if(e < (in_graph->offsets_list[v + 1] - 1))
+							if(in_graph->edges_list[e] >= in_graph->edges_list[e + 1])
 							{
-								printf("v:%u deg:%lu eo:%lu neighbour:%u neighbour+1:%u\n", v, csr->offsets_list[v+1] - csr->offsets_list[v], e, csr->edges_list[e], csr->edges_list[e+1]);
-								assert(csr->edges_list[e] < csr->edges_list[e + 1] && "The CSR graph does not have sorted neighbour-lists");
+								printf("v:%u deg:%lu eo:%lu neighbour:%u neighbour+1:%u\n", v, in_graph->offsets_list[v+1] - in_graph->offsets_list[v], e, in_graph->edges_list[e], in_graph->edges_list[e+1]);
+								assert(in_graph->edges_list[e] < in_graph->edges_list[e + 1] && "The input graph does not have sorted neighbour-lists");
 							}
 					}
 					assert(degree >= 0);
@@ -143,16 +359,16 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 				if(partition == -1U)
 					break; 
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 					{
-						unsigned int dest = csr->edges_list[e];
+						unsigned int dest = in_graph->edges_list[e];
 						
-						// self-edges are already in csr (if they should exist), so we do not add them again 
+						// self-edges are already in in_graph (if they should exist), so we do not add them again 
 						if(dest == v)
 							continue;
 
 						// Check if the edge exists in the neighbour-list of the dest 
-						if(uint_binary_search(csr->edges_list, csr->offsets_list[dest], csr->offsets_list[dest + 1], v) != -1UL)
+						if(uint_binary_search(in_graph->edges_list, in_graph->offsets_list[dest], in_graph->offsets_list[dest + 1], v) != -1UL)
 						{
 							// setting the bit in the edge_is_symmetric to prevent being searched again in Step 5
 							unsigned char val = (((unsigned char)1)<<(e % 8));
@@ -206,7 +422,7 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 		out_graph->edges_list = numa_alloc_interleaved(sizeof(unsigned int) * out_graph->edges_count);
 		assert(out_graph->edges_list != NULL);
 
-	// (4) Updating the last_offsets and out_graph->offsets_list and copying csr edges of each vertex
+	// (4) Updating the last_offsets and out_graph->offsets_list and copying in_graph edges of each vertex
 		mt = - get_nano_time();
 		#pragma omp parallel  
 		{
@@ -226,9 +442,9 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 					unsigned long last_offset = current_offset;
 					current_offset += sym_degree;
 
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v+1]; e++)
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v+1]; e++)
 					{
-						unsigned int neighbour = csr->edges_list[e];
+						unsigned int neighbour = in_graph->edges_list[e];
 						if( (flags & 4U) && neighbour == v)
 							continue;
 						out_graph->edges_list[last_offset++] = neighbour;
@@ -262,17 +478,17 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 					break; 
 
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 					{
 						unsigned int src = v;
-						unsigned int dest = csr->edges_list[e];
+						unsigned int dest = in_graph->edges_list[e];
 
 						// do not duplicate self edges
 						if(src == dest)
 							continue;
 
 						if(edge_is_symmetric[e / 8] & ( ((unsigned char)1) << (e % 8) ) )
-						// if(uint_binary_search(csr->edges_list, csr->offsets_list[dest], csr->offsets_list[dest + 1], src) != -1UL) 
+						// if(uint_binary_search(in_graph->edges_list, in_graph->offsets_list[dest], in_graph->offsets_list[dest + 1], src) != -1UL) 
 							continue;
 
 						unsigned long prev_offset = __atomic_fetch_add(&last_offsets[dest], 1UL, __ATOMIC_RELAXED);
@@ -316,11 +532,11 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 	// Validation
 		if((flags & 1U))
 		{	
-			assert(out_graph->vertices_count == csr->vertices_count);
+			assert(out_graph->vertices_count == in_graph->vertices_count);
 			assert(out_graph->offsets_list[0] == 0);
 			assert(out_graph->offsets_list[out_graph->vertices_count] == out_graph->edges_count);
 
-			// If an edge is in out_graph it should be in csr 
+			// If an edge is in out_graph it should be in in_graph 
 			mt = - get_nano_time();
 			#pragma omp parallel  
 			{
@@ -348,12 +564,12 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 							}
 
 							// it can be an edge in the neighbour-list of src						
-							unsigned long found =  uint_binary_search(csr->edges_list, csr->offsets_list[src], csr->offsets_list[src + 1], dest);
+							unsigned long found =  uint_binary_search(in_graph->edges_list, in_graph->offsets_list[src], in_graph->offsets_list[src + 1], dest);
 							if(found != -1UL)
 								continue;
 
 							// it can be an edge in the neighbour-list of dest
-							found =  uint_binary_search(csr->edges_list, csr->offsets_list[dest], csr->offsets_list[dest + 1], src);
+							found =  uint_binary_search(in_graph->edges_list, in_graph->offsets_list[dest], in_graph->offsets_list[dest + 1], src);
 							if(found == -1UL)
 							{
 								printf("Validation error: cannot find %'u->%'u\n", src, dest);
@@ -368,7 +584,7 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 			dynamic_partitioning_reset(dp);
 			PTIP("Validation 1");
 
-			// If an edge is in csr it should be in out_graph for both endpoints 
+			// If an edge is in in_graph it should be in out_graph for both endpoints 
 			assert((flags & 2U) && "Neighbour-list should be sorted for the second evaluation.");
 			mt = - get_nano_time();
 			#pragma omp parallel  
@@ -382,10 +598,10 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 					if(partition == -1U)
 						break; 
 					for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-						for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+						for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 						{
 							unsigned int src = v;
-							unsigned int dest = csr->edges_list[e];
+							unsigned int dest = in_graph->edges_list[e];
 
 							if((flags & 4U) && src == dest)
 								continue;
@@ -411,13 +627,13 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 		dynamic_partitioning_release(dp);
 		dp = NULL;
 
-		numa_free(last_offsets, (1 + csr->vertices_count) * sizeof(unsigned long));
+		numa_free(last_offsets, (1 + in_graph->vertices_count) * sizeof(unsigned long));
 		last_offsets = NULL;
 		
 		free(partitions_total_edges);
 		partitions_total_edges = NULL;
 
-		numa_free(edge_is_symmetric, sizeof(unsigned char) * ( 1 + csr->edges_count / 8));
+		numa_free(edge_is_symmetric, sizeof(unsigned char) * ( 1 + in_graph->edges_count / 8));
 		edge_is_symmetric = NULL;
 
 		free(ttimes);
@@ -432,38 +648,35 @@ struct ll_400_graph* csr2sym(struct par_env* pe, struct ll_400_graph* csr, unsig
 }
 
 /*
-	csr2csc() has two passes over edges to identify degree of vertex and then to write neighbour-lists.
+	atomic_transpose() has two passes over edges to identify degree of vertex and then to write neighbour-lists.
 	Total complexity is 2|E| plus |E|log(|E|/|V|) if neighbour-lists should be sorted.
 
 	flags: 
-		bit 0 : validate results
+		bit 0 : validate results (requires bit 1 to be set)
 		bit 1 : sort neighbour-list of the output  
 		bit 2 : remove self-edges
 		bit 3 : only create offsets_list of the out_graph and do not write edges
 */
-struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsigned int flags)
+struct ll_400_graph* atomic_transpose(struct par_env* pe, struct ll_400_graph* in_graph, unsigned int flags)
 {
 	// Initial checks
 		unsigned long tt = - get_nano_time();
-		assert(pe != NULL && csr != NULL);
-		printf("\n\033[3;35mcsr2csc\033[0;37m using \033[3;35m%d\033[0;37m threads.\n", pe->threads_count);
+		assert(pe != NULL && in_graph != NULL);
+		printf("\n\033[3;35matomic_transpose\033[0;37m using \033[3;35m%d\033[0;37m threads.\n", pe->threads_count);
 
 	// Partitioning
 		unsigned int thread_partitions = 64;
 		unsigned int partitions_count = pe->threads_count * thread_partitions;
-		printf("\033[3;35mCSR\033[0;37m partitioning, partitions: %'u \n", partitions_count);
 		unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
 		assert(partitions != NULL);
-		parallel_edge_partitioning(csr, partitions, partitions_count);
+		parallel_edge_partitioning(in_graph, partitions, partitions_count);
 		struct dynamic_partitioning* dp = dynamic_partitioning_initialize(pe, partitions_count);
-
-		unsigned int* csc_partitions = NULL;
 
 	// Allocating memory
 		struct ll_400_graph* out_graph =calloc(sizeof(struct ll_400_graph),1);
 		assert(out_graph != NULL);
-		out_graph->vertices_count = csr->vertices_count;
-		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + csr->vertices_count));
+		out_graph->vertices_count = in_graph->vertices_count;
+		out_graph->offsets_list = numa_alloc_interleaved(sizeof(unsigned long) * ( 1 + in_graph->vertices_count));
 		assert(out_graph->offsets_list != NULL);
 
 		unsigned long* partitions_total_edges = calloc(sizeof(unsigned long), partitions_count);
@@ -472,7 +685,7 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 		unsigned long* ttimes = calloc(sizeof(unsigned long), pe->threads_count);
 		assert(ttimes != NULL);
 
-	// (1) Identifying degree of vertices in the CSC graph
+	// (1) Identifying degree of vertices in the out_graph
 		unsigned long self_edges = 0;
 		unsigned long mt = - get_nano_time();
 		#pragma omp parallel  reduction(+:self_edges)
@@ -486,9 +699,9 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 				if(partition == -1U)
 					break; 
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 					{
-						unsigned int dest = csr->edges_list[e];
+						unsigned int dest = in_graph->edges_list[e];
 						
 						if(dest == v)
 						{
@@ -537,7 +750,7 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 				sum += temp;
 			}
 			out_graph->edges_count = sum;
-			printf("%-20s \t\t\t %'10lu\n","CSC edges:", out_graph->edges_count);
+			printf("%-20s \t\t\t %'10lu\n","out_graph edges:", out_graph->edges_count);
 		}
 		out_graph->offsets_list[out_graph->vertices_count] = out_graph->edges_count;
 
@@ -556,9 +769,9 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 				unsigned long current_offset = partitions_total_edges[partition];
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
 				{
-					unsigned long csc_degree = out_graph->offsets_list[v];
+					unsigned long t_degree = out_graph->offsets_list[v];
 					out_graph->offsets_list[v] = current_offset;
-					current_offset += csc_degree;
+					current_offset += t_degree;
 				}
 
 				if(partition + 1 < partitions_count)
@@ -573,15 +786,10 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 		PTIP("(3) Update offsets_list");
 
 	if(flags & 8U)
-		goto csr2csc_release;
+		goto atomic_transpose_release;
 
 	out_graph->edges_list = numa_alloc_interleaved(sizeof(unsigned int) * out_graph->edges_count);
 	assert(out_graph->edges_list != NULL);
-
-	// CSC partitioning
-		csc_partitions = calloc(sizeof(unsigned int), partitions_count+1);
-		assert(csc_partitions != NULL);
-		parallel_edge_partitioning(out_graph, csc_partitions, partitions_count);
 		
 	// (4) Writing edges
 		mt = - get_nano_time();
@@ -597,10 +805,10 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 				if(partition == -1U)
 					break; 
 				for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-					for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
+					for(unsigned long e = in_graph->offsets_list[v]; e < in_graph->offsets_list[v + 1]; e++)
 					{
 						unsigned int src = v;
-						unsigned int dest = csr->edges_list[e];
+						unsigned int dest = in_graph->edges_list[e];
 
 						if(src == dest)
 							if(flags & 4U)  // remove self edges
@@ -649,159 +857,30 @@ struct ll_400_graph* csr2csc(struct par_env* pe, struct ll_400_graph* csr, unsig
 		PTIP("(5) Updating offsets_list");	
 
 	// (6) Sorting
-		if((flags & 2U))
-		{	
-			mt = - get_nano_time();
-			#pragma omp parallel  
-			{
-				unsigned int tid = omp_get_thread_num();
-				ttimes[tid] = - get_nano_time();
-				unsigned int partition = -1U;	
-				while(1)
-				{
-					partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
-					if(partition == -1U)
-						break; 
-					for(unsigned int v = csc_partitions[partition]; v < csc_partitions[partition + 1]; v++)
-					{
-						unsigned int degree = out_graph->offsets_list[v+1] - out_graph->offsets_list[v];
-						if(degree < 2)
-							continue;
-						quick_sort_uint(&out_graph->edges_list[out_graph->offsets_list[v]], 0, degree - 1);
-					}
-				}
-				ttimes[tid] += get_nano_time();
-			}
-			mt += get_nano_time();
-			dynamic_partitioning_reset(dp);
-			PTIP("(6) Sorting");
-		}
-
+		if(flags & (2U | 1U))
+			sort_neighbor_lists(pe, out_graph);
+			
 	// Validation
 		if((flags & 1U))
 		{	
-			assert(out_graph->vertices_count == csr->vertices_count);
-			assert(out_graph->offsets_list[0] == 0);
-			assert(out_graph->offsets_list[out_graph->vertices_count] == out_graph->edges_count);
-			assert(out_graph->edges_count <= csr->edges_count);
-		
-			// Check if csr is sorted
-				mt = - get_nano_time();
-				#pragma omp parallel  
-				{
-					unsigned int tid = omp_get_thread_num();
-					ttimes[tid] = - get_nano_time();
-					unsigned long thread_se = 0;
-					unsigned int partition = -1U;
-					while(1)
-					{
-						partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
-						if(partition == -1U)
-							break; 
-						for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)		
-							for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
-								if(e < (csr->offsets_list[v + 1] - 1))
-									if(csr->edges_list[e] >= csr->edges_list[e + 1])
-									{
-										printf("v:%'u,  deg:%'lu,  eo:%'lu,  neighbour: %'u,  next-neighbour: %'u\n", v, csr->offsets_list[v+1] - csr->offsets_list[v], e, csr->edges_list[e], csr->edges_list[e+1]);
-										assert(csr->edges_list[e] < csr->edges_list[e + 1] && "The CSR graph does not have sorted neighbour-lists");
-									}
-					}
-					ttimes[tid] += get_nano_time();
-				}
-				mt += get_nano_time();
-				dynamic_partitioning_reset(dp);
-				PTIP("Val 1, check");
-
-			// If an edge is in out_graph it should be in csr 
-				mt = - get_nano_time();
-				#pragma omp parallel  
-				{
-					unsigned int tid = omp_get_thread_num();
-					ttimes[tid] = - get_nano_time();
-					unsigned int partition = -1U;
-					while(1)
-					{
-						partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
-						if(partition == -1U)
-							break; 
-						for(unsigned int v = csc_partitions[partition]; v < csc_partitions[partition + 1]; v++)
-						{
-							assert(out_graph->offsets_list[v+1] >= out_graph->offsets_list[v]);
-							for(unsigned long e = out_graph->offsets_list[v]; e < out_graph->offsets_list[v + 1]; e++)
-							{
-								unsigned int dest = v;
-								unsigned int src = out_graph->edges_list[e];
-
-								if((flags & 4U) && src == dest)
-								{
-									printf("Validation 1 error: src == dest %'u->%'u\n", src, dest);
-									assert(dest != src);
-								}
-
-								unsigned long found = uint_binary_search(csr->edges_list, csr->offsets_list[src], csr->offsets_list[src + 1], dest);
-								if(found == -1UL)
-								{
-									printf("Validation 1 error: cannot find %'u->%'u\n", src, dest);
-									assert(found != -1UL);
-								}
-							}					
-						}
-					}
-					ttimes[tid] += get_nano_time();
-				}
-				mt += get_nano_time();
-				dynamic_partitioning_reset(dp);
-				PTIP("Validation 1");
-
-			// If an edge is in csr it should be in out_graph for both endpoints 
-				assert((flags & 2U) && "Neighbour-list should be sorted for the second evaluation.");
-				mt = - get_nano_time();
-				#pragma omp parallel  
-				{
-					unsigned int tid = omp_get_thread_num();
-					ttimes[tid] = - get_nano_time();
-					unsigned int partition = -1U;
-					while(1)
-					{
-						partition = dynamic_partitioning_get_next_partition(dp, tid, partition);
-						if(partition == -1U)
-							break; 
-						for(unsigned int v = partitions[partition]; v < partitions[partition + 1]; v++)
-							for(unsigned long e = csr->offsets_list[v]; e < csr->offsets_list[v + 1]; e++)
-							{
-								unsigned int src = v;
-								unsigned int dest = csr->edges_list[e];
-
-								if((flags & 4U) && src == dest)
-									continue;
-
-								unsigned long found = uint_binary_search(out_graph->edges_list, out_graph->offsets_list[dest], out_graph->offsets_list[dest + 1], src);
-								if(found == -1UL)
-								{
-									printf("Validation 2 error: cannot find %'u->%'u\n", src, dest);
-									assert(found != -1UL);
-								}
-							}	
-					}
-					ttimes[tid] += get_nano_time();
-				}
-				mt += get_nano_time();
-				dynamic_partitioning_reset(dp);
-				PTIP("Validation 2");
+			assert(flags & 2U);
+			
+			unsigned int tf = 0;
+			if(flags & 4U)
+				tf = 1U;
+			int ret = validate_transposition(pe, in_graph, out_graph, tf);
+			if(ret != 1)
+			{
+				printf("  Validation failed.\n");	
+				assert(ret == 1);
+			}
 		}
 
 	// Releasing memory
-	csr2csc_release: 
+	atomic_transpose_release: 
 
 		free(partitions);
 		partitions = NULL;
-
-		if(csc_partitions)
-		{
-			free(csc_partitions);
-			csc_partitions = NULL;
-		}
 
 		dynamic_partitioning_release(dp);
 		dp = NULL;
@@ -854,7 +933,6 @@ struct ll_404_graph* add_4B_weight_to_ll_400_graph(struct par_env* pe, struct ll
 			// Partitioning
 			unsigned int thread_partitions = 64;
 			unsigned int partitions_count = pe->threads_count * thread_partitions;
-			printf("\033[3;35mCSR\033[0;37m partitioning, partitions: %'u \n", partitions_count);
 			unsigned int* partitions = calloc(sizeof(unsigned int), partitions_count+1);
 			assert(partitions != NULL);
 			parallel_edge_partitioning(g, partitions, partitions_count);

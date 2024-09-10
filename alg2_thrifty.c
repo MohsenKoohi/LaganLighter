@@ -58,7 +58,7 @@ int main(int argc, char** args)
 		
 		if(!LL_INPUT_GRAPH_IS_SYMMETRIC)
 		{
-			struct ll_400_graph* sym_graph = csr2sym(pe, graph,  2U + 4U); // sort neighbour-lists and remove self-edges
+			struct ll_400_graph* sym_graph = symmetrize_graph(pe, graph,  2U + 4U); // sort neighbour-lists and remove self-edges
 
 			// Releasing the input graph
 				if(read_flags & 1U<<31)

@@ -72,7 +72,7 @@ int main(int argc, char** args)
 			
 			if(LL_INPUT_GRAPH_IS_SYMMETRIC == 0)
 			{
-				sym_graph = csr2sym(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
+				sym_graph = symmetrize_graph(pe, csr_graph,  2U + 4U); // sort neighbour-lists and remove self-edges
 				printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",LL_INPUT_GRAPH_PATH,sym_graph->vertices_count,sym_graph->edges_count);
 
 				if(read_flags & 1U<<31)
