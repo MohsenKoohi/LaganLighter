@@ -502,7 +502,30 @@ void rand_initialize_splitmix64(unsigned long s[4], unsigned long x)
 	return;
 }
 
-// XOSHIRO, https://prng.di.unimi.it/xoshiro256plusplus.c
+/* 
+	XOSHIRO, 
+	https://prng.di.unimi.it/xoshiro256plusplus.c
+	
+	@article
+	{
+		10.1145/3460772,
+		author = {Blackman, David and Vigna, Sebastiano},
+		title = {Scrambled Linear Pseudorandom Number Generators},
+		year = {2021},
+		issue_date = {December 2021},
+		publisher = {Association for Computing Machinery},
+		address = {New York, NY, USA},
+		volume = {47},
+		number = {4},
+		issn = {0098-3500},
+		url = {https://doi.org/10.1145/3460772},
+		doi = {10.1145/3460772},
+		journal = {ACM Trans. Math. Softw.},
+		month = {sep},
+		articleno = {36},
+		numpages = {32}
+	}
+*/
 unsigned long rand_xoshiro256(unsigned long s[4]) 
 {
 	unsigned long rand_val = s[0] + (((s[0] + s[3]) << 23) | ((s[0] + s[3]) >> (64 - 23)));
