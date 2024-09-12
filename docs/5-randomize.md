@@ -11,6 +11,7 @@ locality \[
 To that end, we create the `random_ordering()` function in [relabel.c](../relabel.c) file.
 It consists a number of iterations. In each iteration, concurrent threads traverse the list
 of vertices and assign them new IDs. The function uses [xoshiro](https://prng.di.unimi.it/) 
+\[[DOI:10.1145/3460772](https://doi.org/10.1145/3460772)\]
 to produce random numbers.
 
 The [alg4_randomize](../alg4_randomize.c) tests this function for a number of graphs.
