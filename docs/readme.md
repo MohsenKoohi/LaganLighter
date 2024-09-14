@@ -7,4 +7,4 @@
 - [Alg. 1: SAPCo Sort](1.0.sapco.md)
 - [Alg. 2: Thrifty](2.0.thrifty.md)
 - [Alg. 3: MASTIFF](3.0.mastiff.md)
-- [Alg. 4: Random Vertex Relabelling](4.0-random-relabelling.md)
+- [Alg. 4: Random Vertex Relabelling](4.0-random-relabeling.md)
