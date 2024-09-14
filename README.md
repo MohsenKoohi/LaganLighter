@@ -27,7 +27,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 ### Compiling and Executing Code
  - Make sure the requried libraries are accessible through `$LD_LIBRARY_PATH`.
  - Run `make alg...` (e.g. `make alg1_sapco_sort`). This builds the executible file and runs it for the test graph. 
- - For identifying input graph and other options, please refer to [LaganLighter Documents, Loading Graphs](docs/3-loading.md).
+ - For identifying input graph and other options, please refer to [LaganLighter Documents, Loading Graphs](docs/0.2-loading.md).
  
 ### How Does LaganLighter Work?
 
@@ -41,11 +41,11 @@ particularly:
   - *`PARAGRAPHER_CSX_WG_404_AP`*, and
   - *`PARAGRAPHER_CSX_WG_800_AP`* .
 
-Please refer to [Graph Loading Documentation](docs/3-loading.md).
+Please refer to [Graph Loading Documentation](docs/0.2-loading.md).
 
 ### Processing Multiple Graphs 
 
-Please refer to [Launcher Script Documentaion](docs/4-launcher.md).
+Please refer to [Launcher Script Documentaion](docs/0.3-launcher.md).
  
 ### Bugs & Support
 
