@@ -504,8 +504,11 @@ void rand_initialize_splitmix64(unsigned long s[4], unsigned long x)
 
 /* 
 	XOSHIRO, 
-	https://prng.di.unimi.it/xoshiro256plusplus.c
 	
+	https://prng.di.unimi.it/
+	https://prng.di.unimi.it/xoshiro256plusplus.c
+	https://prng.di.unimi.it/xoroshiro64star.c
+
 	@article
 	{
 		10.1145/3460772,
@@ -539,6 +542,22 @@ unsigned long rand_xoshiro256(unsigned long s[4])
 	s[3] = (s[3] << 45) | (s[3] >> (64 - 45));
 
 	return rand_val;
+}
+
+unsigned int  rand_xoroshiro64star(unsigned int s[2]) {
+	const unsigned int  s0 = s[0];
+	unsigned int  s1 = s[1];
+	const unsigned int  result = s0 * 0x9E3779BB;
+
+	s1 ^= s0;
+	
+	// s[0] = rotl(s0, 26) ^ s1 ^ (s1 << 9); // a, b
+	s[0] = ((s0 << 26) | (s0 >> (32 - 26))) ^ s1 ^ (s1 << 9); // a, b
+	
+	// s[1] = rotl(s1, 13); // c
+	s[1] = ((s1 << 13) | (s1 >> (32 - 13))); // c
+
+	return result;
 }
 
 #endif
