@@ -19,7 +19,6 @@ COMMS=`echo -e "
 	/drop_caches.sh
 	/var/shared/power/bin/flushcache.sh
 	/opt/service/bin/dropcache both
-	$(realpath ~)/Programs/scripts/drop_caches.sh
 "`
 
 while IFS= read -r c; do
@@ -30,9 +29,9 @@ while IFS= read -r c; do
 		$c
 		[ $? = 0 ] && exit
 
-		sudo $c
+		sudo -n $c 
 		[ $? = 0 ] && exit
 	fi
 done <<< $COMMS
-exit
+
 make flushcache -C paragrapher/test
