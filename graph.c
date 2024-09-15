@@ -781,6 +781,9 @@ int store_shm_ll_400_graph(struct par_env* pe, char* file_name, struct ll_400_gr
 		for(unsigned long e=0; e < g->edges_count; e++)
 			sg_edges[e] = g->edges_list[e];
 
+		int ret = msync(sg, graph_size, MS_SYNC);
+		assert(ret == 0);
+
 		munmap(sg, graph_size);
 		sg = NULL;
 
@@ -833,6 +836,9 @@ int store_shm_ll_404_graph(struct par_env* pe, char* file_name, struct ll_404_gr
 		#pragma omp parallel for 
 		for(unsigned long e=0; e < 2UL * g->edges_count; e++)
 			sg_edges[e] = g->edges_list[e];
+
+		int ret = msync(sg, graph_size, MS_SYNC);
+		assert(ret == 0);
 
 		munmap(sg, graph_size);
 		sg = NULL;
