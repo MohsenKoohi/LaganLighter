@@ -299,6 +299,8 @@ function ul2s()
 		c=`echo "$c+1"|bc`
 	done
 
+	rm -rf $build_folder
+
 	echo -e "\nFinished on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" >> $report_path
 
 # Post processing actions 

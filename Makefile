@@ -67,6 +67,8 @@ all: paragrapher Makefile
 	
 paragrapher: FORCE
 	make -C paragrapher all
+
+download_sample_WG400:
 	@if [ ! -f data/cnr-2000.graph ]; then \
 		echo -e "--------------------\n\033[1;34mDownloading cnr-2000\033[0;37m"; \
 		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.graph"; \
