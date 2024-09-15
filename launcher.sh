@@ -111,6 +111,8 @@ function ul2s()
 		echo -e "  \033[0;31mError:\033[0;37m Datasets folder \"$DF\" does not exist.";
 		exit 2;
 	fi;
+
+	
 	
 	echo "  Make flags (make-flags): \"$MAKE_FLAGS\""
 	echo "  Program args (program-args): \"$PROGRAM_ARGS\""
@@ -125,6 +127,8 @@ function ul2s()
 
 # Identifying datasets
 	echo -e "\033[0;34mDatasets\033[0;37m"
+	DF=`realpath $DF`
+	echo "  Dataset folder realpath: $DF"
 	dataset_patterns="*.graph *.txt"
 	if [ $IW == 1 ]; then
 		dataset_patterns="$dataset_patterns *.labels"
@@ -216,7 +220,25 @@ function ul2s()
 
 # Processing graphs
 	echo -e "\n\033[0;34mProcessing Datasets\033[0;37m"
+
+	# Preparing the build folder
 	hostname=`hostname|cut -f1 -d.`
+	home_folder=`pwd`
+	build_folder=$home_folder/build/`date +"%Y%m%d-%H%M%S"`-$hostname
+	echo "  Build folder: $build_folder"
+	mkdir -p $build_folder
+	
+	for f in `ls`; do
+		[ $f = "build" ] && continue
+		[ $f = "data" ] && continue
+		[ $f = "obj" ] && continue
+		[ $f = "logs" ] && continue
+		[ $f = "docs" ] && continue
+		# [ $f = "paragrapher" ] && continue
+
+		cp -r $f $build_folder
+	done
+
 	if [ ! -d logs ]; then
 		mkdir logs
 		c=0
@@ -263,12 +285,14 @@ function ul2s()
 		ds_log_file="$log_folder/$c-"`echo $ds | rev | cut -f2- -d. | rev`".txt"
 
 		cmd="LL_INPUT_GRAPH_PATH=$input_graph LL_INPUT_GRAPH_TYPE=$input_type LL_INPUT_GRAPH_BATCH_ORDER=$c  LL_INPUT_GRAPH_IS_SYMMETRIC=$is_sym"
-		cmd="$cmd LL_STORE_INPUT_GRAPH_IN_SHM=$SHM_STORE LL_OUTPUT_REPORT_PATH=$report_path"
+		cmd="$cmd LL_STORE_INPUT_GRAPH_IN_SHM=$SHM_STORE LL_OUTPUT_REPORT_PATH=$home_folder"/"$report_path"
 		
 		echo "  $c, $input_graph:"
 		echo "    $cmd make $ALG $MAKE_FLAGS args=\"$PROGRAM_ARGS\" 1>$ds_log_file 2>&1" 
 
-		env $cmd make $ALG $MAKE_FLAGS args="$PROGRAM_ARGS" 1>$ds_log_file 2>&1
+		cd $build_folder
+		env $cmd make $ALG $MAKE_FLAGS args="$PROGRAM_ARGS" 1>$home_folder"/"$ds_log_file 2>&1
+		cd $home_folder
 
 		echo 
 		
