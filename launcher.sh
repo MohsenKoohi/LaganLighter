@@ -260,12 +260,18 @@ function ul2s()
 	
 	report_path=$log_folder/report.txt
 	echo "  Report file: "$report_path
-	
-	echo -e "$ALG, $REPORT_TITLE \n" > $report_path
-	echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\n" >> $report_path
-	echo -e "Started on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" >> $report_path
 
-	echo
+	# Header of report file
+		echo -e "$ALG, $REPORT_TITLE \n" > $report_path
+		echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\n" >> $report_path
+		echo -e "Datasets: $SF - $SA\n" >> $report_path
+		c=$SF;
+		for ds in $datasets; do
+			echo "  $c, $ds" >> $report_path
+			c=`echo "$c+1"|bc`
+		done
+		echo -e "\nStarted on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" >> $report_path
+		echo
 
 	c=$SF;
 	for ds in $datasets; do
