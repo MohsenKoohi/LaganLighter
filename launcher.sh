@@ -41,6 +41,8 @@ function ul2s()
 	echo "  -iw (include weighted graphs, default: false)"
 	echo "  -shm-store (store graphs in shm, default: 0)"
 	echo "  -shm-delete (delete shm graphs at the end, default: 0)"
+	echo "  report-title=\"A double quoted string that will be printed on top of the report file\" (default empty)"
+
 	echo
 
 # Reading arguments
@@ -67,6 +69,7 @@ function ul2s()
 	LD=0
 	SHM_STORE=0
 	SHM_DELETE=0
+	REPORT_TITLE=""
 
 	for i in `seq 1 $#`; do
 		if [[ "${!i}" == *"df"* ]]; then 
@@ -104,6 +107,10 @@ function ul2s()
 		if [ "${!i}" == "-shm-delete" ]; then
 			SHM_DELETE=1
 		fi
+
+		if [[ "${!i}" == *"report-title"* ]]; then 
+			REPORT_TITLE=`echo "${!i}" | cut -f2- -d=`
+		fi
 	done 
 
 	if [ ! -e $DF ]; 
@@ -123,6 +130,7 @@ function ul2s()
 	echo "  Include weighted graphs (-iw): $IW"
 	echo "  Store graph in shm (-shm-store): $SHM_STORE"
 	echo "  Delete shm graphs at end (-shm-delete): $SHM_DELETE"
+	echo "  Report title (report-title): $REPORT_TITLE"
 	echo 
 
 # Identifying datasets
@@ -249,9 +257,14 @@ function ul2s()
 
 	mkdir -p $log_folder
 	echo "  Log Folder: "$log_folder
+	
 	report_path=$log_folder/report.txt
-	echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\nStarted on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" > $report_path
 	echo "  Report file: "$report_path
+	
+	echo -e "$ALG, $REPORT_TITLE \n" > $report_path
+	echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\n" >> $report_path
+	echo -e "Started on: "`date +"%Y/%m/%d-%H:%M:%S"`"\n" >> $report_path
+
 	echo
 
 	c=$SF;
@@ -284,8 +297,10 @@ function ul2s()
 
 		ds_log_file="$log_folder/$c-"`echo $ds | rev | cut -f2- -d. | rev`".txt"
 
-		cmd="LL_INPUT_GRAPH_PATH=$input_graph LL_INPUT_GRAPH_TYPE=$input_type LL_INPUT_GRAPH_BATCH_ORDER=$c  LL_INPUT_GRAPH_IS_SYMMETRIC=$is_sym"
+		cmd="LL_INPUT_GRAPH_PATH=$input_graph LL_INPUT_GRAPH_TYPE=$input_type"
+		cmd="$cmd LL_INPUT_GRAPH_BATCH_ORDER=$c LL_INPUT_GRAPH_IS_SYMMETRIC=$is_sym"
 		cmd="$cmd LL_STORE_INPUT_GRAPH_IN_SHM=$SHM_STORE LL_OUTPUT_REPORT_PATH=$home_folder"/"$report_path"
+		cmd="$cmd LL_GRAPH_RA_BIN_FOLDER=$DF/RA_bin_arrays"
 		
 		echo "  $c, $input_graph:"
 		echo "    $cmd make $ALG $MAKE_FLAGS args=\"$PROGRAM_ARGS\" 1>$ds_log_file 2>&1" 
