@@ -262,9 +262,9 @@ function ul2s()
 	echo "  Report file: "$report_path
 
 	# Header of report file
-		echo -e "$ALG, $REPORT_TITLE \n" > $report_path
+		echo "$ALG, $REPORT_TITLE" > $report_path
 		echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\n" >> $report_path
-		echo -e "Datasets: $SF - $SA\n" >> $report_path
+		echo "Datasets: $SF - $SA" >> $report_path
 		c=$SF;
 		for ds in $datasets; do
 			echo "  $c, $ds" >> $report_path
