@@ -29,7 +29,7 @@ unsigned int papi_events []= {
  
 // Print Time and Idle Percentage
 #define PTIP(step_name) \
-  printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%%)\n",step_name, mt/1e6, get_idle_percentage(mt, ttimes, omp_get_num_threads()));
+  printf("%-60s\t\t %'10.2f (ms) \t(%5.2f%%)\n",step_name, mt/1e6, get_idle_percentage(mt, ttimes, pe->threads_count));
 
 #define PT(step_name) \
 	printf("%-60s\t\t %'10.2f (ms)\n",step_name, mt/1e6); 
