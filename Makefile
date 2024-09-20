@@ -1,6 +1,6 @@
 GCC := gcc
 GXX := g++
-LIB := paragrapher/lib64:$(LD_LIBRARY_PATH)
+LIB := paragrapher/lib64:$(shell echo "$(LD_LIBRARY_PATH)"|sed 's/:*$$//'):
 SHELL := /bin/bash
 
 OBJ := obj

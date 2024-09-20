@@ -15,15 +15,15 @@
 #include <sched.h>
 
 unsigned int papi_events []= {
-	PAPI_LST_INS,
-	PAPI_L3_TCM,
+	// PAPI_LST_INS,
+	// PAPI_L3_TCM,
 	// PAPI_L2_TCM,
 	PAPI_TOT_INS,
-	PAPI_RES_STL,
+	// PAPI_RES_STL,
 	PAPI_TLB_DM,
 	// PAPI_TLB_IM,
-	PAPI_BR_MSP,
-	// PAPI_BR_INS,
+	// PAPI_BR_MSP,
+	PAPI_BR_INS,
 	PAPI_TOT_CYC
 };
  
@@ -53,6 +53,13 @@ void papi_init()
 	int ret = PAPI_library_init(PAPI_VER_CURRENT);
 	assert(ret == PAPI_VER_CURRENT);
 
+	printf( "PAPI_VER_CURRENT : %d.%d.%d.%d\n",
+		PAPI_VERSION_MAJOR( PAPI_VER_CURRENT ),
+		PAPI_VERSION_MINOR( PAPI_VER_CURRENT ),
+		PAPI_VERSION_REVISION( PAPI_VER_CURRENT ),
+		PAPI_VERSION_INCREMENT( PAPI_VER_CURRENT ) 
+	);
+	
 	ret=PAPI_thread_init(omp_get_thread_num_ulong);
 	assert(ret == PAPI_OK);
 
@@ -68,7 +75,8 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 	assert(ret == PAPI_OK);
 
 	unsigned long events_count = 0;
-	for(unsigned int i=0; i<in_events_count; i++)
+	for(unsigned int i=0; i<min(PAPI_num_hwctrs(),in_events_count); i++)
+	// for(unsigned int i=0; i<in_events_count; i++)
 	{
 		ret = PAPI_add_event(event_set, in_events[i]);
 		if(ret != PAPI_OK)
@@ -98,8 +106,8 @@ unsigned long papi_start(unsigned int* in_events, unsigned int in_events_count)
 	ret = PAPI_start(event_set);
 	if(ret != PAPI_OK)
 	{
-		printf("PAPI can't start, %d: %s\n", ret, PAPI_strerror(ret));
-		// exit(-1);
+		printf("PAPI can't start, %d: %s\nCheck/remove events and restart.\n", ret, PAPI_strerror(ret));
+		exit(-1);
 		return 0UL;
 	}
 	
@@ -224,18 +232,19 @@ struct par_env
 int thread_papi_read(struct par_env* pe)
 {
 	unsigned long temp_vals[32]={0};
-	unsigned long arg = pe->papi_args[omp_get_thread_num()];
+	unsigned long papi_arg = pe->papi_args[omp_get_thread_num()];
+	unsigned long events_count = (papi_arg >> 32);
 	// if(arg == 0)
 	// 	return -2;
 
-	if(arg != 0)
+	if(papi_arg != 0)
 	{
-		int ret = papi_read(arg, temp_vals);
+		int ret = papi_read(papi_arg, temp_vals);
 		// if(ret != 0)
 		// 	return -1;
 		
 		if(ret == 0)
-			for(unsigned int e=0; e<sizeof(papi_events)/sizeof(papi_events[0]); e++)
+			for(unsigned int e=0; e<events_count; e++)
 				__atomic_add_fetch(&pe->hw_events[e], temp_vals[e], __ATOMIC_SEQ_CST);
 	}
 	
@@ -817,12 +826,12 @@ struct par_env* initialize_omp_par_env()
 		papi_init();
 		pe->papi_args = calloc(sizeof(unsigned long), pe->threads_count);
 		assert(pe->papi_args != NULL);
-
 		#pragma omp parallel num_threads(pe->threads_count)
 		{
-			unsigned tid = omp_get_thread_num();
+			unsigned int tid = omp_get_thread_num();
 			pe->papi_args[tid] = papi_start(papi_events, sizeof(papi_events)/sizeof(papi_events[0]));
 		}
+			
 
 		{
 			unsigned long papi_arg = pe->papi_args[0];
