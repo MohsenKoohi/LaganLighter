@@ -255,6 +255,11 @@ function ul2s()
 	fi
 	log_folder="logs/$ALG-$hostname-$c"
 
+	while [ -d $log_folder ]; do
+		c=`echo "$c+1"|bc`
+		log_folder="logs/$ALG-$hostname-$c"
+	done
+
 	mkdir -p $log_folder
 	echo "  Log Folder: "$log_folder
 	
