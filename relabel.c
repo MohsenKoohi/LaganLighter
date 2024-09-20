@@ -970,6 +970,9 @@ unsigned int* get_create_fixed_random_ordering(struct par_env* pe, char* graph_b
 	);
 	assert(RA != MAP_FAILED);
 
+	close(fd);
+	fd = -1;
+
 	free(file_name);
 	file_name = NULL;
 
