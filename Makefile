@@ -16,27 +16,24 @@ _available_cores := $(shell echo "$(_available_threads)/$(_threads_per_core)"|bc
 
 # _order := {$(shell numactl --hardware | grep cpus | cut -f2 -d":" | xargs | sed -e "s/ /},{/g")}
 
-ifdef wait_passive
+OMP_WAIT_POLICY := active
+ifeq "$(wait_passive)" "1" 
 	OMP_WAIT_POLICY := passive
-else
-	OMP_WAIT_POLICY := active
 endif
 
-ifdef no_ht
+OMP_NUM_THREADS := $(_available_threads)
+ifeq "$(no_ht)" "1" 
 	# without hyper-threading
 	OMP_NUM_THREADS := $(_available_cores)
-else
-	# with hyper-threading
-	OMP_NUM_THREADS := $(_available_threads)
-endif
+endif	
 
 OMP_VARS := OMP_NUM_THREADS=$(OMP_NUM_THREADS) OMP_DYNAMIC=false OMP_WAIT_POLICY=$(OMP_WAIT_POLICY)
 
-ifdef debug
+COMPILE_TYPE := -O3 # -DNDEBUG
+ifeq "$(debug)" "1"	
 	COMPILE_TYPE := -g
-else
-	COMPILE_TYPE := -O3 # -DNDEBUG
-endif
+endif	
+
 
 $(OBJ)/alg%.obj: alg%.c *.c Makefile paragrapher
 	mkdir -p $(OBJ)
