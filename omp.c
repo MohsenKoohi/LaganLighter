@@ -23,7 +23,7 @@ unsigned int papi_events []= {
 	PAPI_TLB_DM,
 	// PAPI_TLB_IM,
 	// PAPI_BR_MSP,
-	PAPI_BR_INS,
+	// PAPI_BR_INS,
 	PAPI_TOT_CYC
 };
  

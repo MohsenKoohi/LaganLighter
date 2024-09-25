@@ -6,7 +6,6 @@ SHELL := /bin/bash
 OBJ := obj
 INCLUDE_LIBS := $(addprefix -L , $(subst :, ,$(LIB))) 
 INCLUDE_HEADER := $(addprefix -I , $(subst :,/../include ,$(LIB)))
-FLAGS :=  -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt # -lpfm
 
 _threads_per_core := $(shell lscpu | grep "Thread(s) per core" | head -n1 | cut -f2 -d":"|xargs)
 _total_threads := $(shell nproc --all) #getconf _NPROCESSORS_ONLN
@@ -27,6 +26,10 @@ ifeq "$(no_ht)" "1"
 	OMP_NUM_THREADS := $(_available_cores)
 endif	
 
+ifeq "$(energy)" "1"
+	EN_FLAG := -D_ENERGY_MEASUREMENT
+endif
+
 OMP_VARS := OMP_NUM_THREADS=$(OMP_NUM_THREADS) OMP_DYNAMIC=false OMP_WAIT_POLICY=$(OMP_WAIT_POLICY)
 
 COMPILE_TYPE := -O3 # -DNDEBUG
@@ -34,8 +37,9 @@ ifeq "$(debug)" "1"
 	COMPILE_TYPE := -g
 endif	
 
+FLAGS := $(EN_FLAG) -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt # -lpfm
 
-$(OBJ)/alg%.obj: alg%.c *.c Makefile paragrapher
+$(OBJ)/alg%.obj: alg%.c *.c Makefile paragrapher FORCE
 	mkdir -p $(OBJ)
 	@if [ `$(GCC) -dumpversion | cut -f1 -d.` -le 8 ]; then\
 		$(GCC) -dumpversion; \
@@ -89,6 +93,6 @@ touch:
 
 FORCE: ;
 
-.SUFFIXES:
+# .SUFFIXES:
 
-.keep_exec_files: $(addprefix $(OBJ)/,$(subst .c,.obj, $(shell ls *.c)))
+# .keep_exec_files: $(addprefix $(OBJ)/,$(subst .c,.obj, $(shell ls *.c)))
