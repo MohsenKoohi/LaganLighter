@@ -21,10 +21,14 @@ ifeq "$(wait_passive)" "1"
 endif
 
 OMP_NUM_THREADS := $(_available_threads)
-ifeq "$(no_ht)" "1" 
-	# without hyper-threading
-	OMP_NUM_THREADS := $(_available_cores)
-endif	
+ifeq "$(threads)" ""
+	ifeq "$(no_ht)" "1" 
+		# without hyper-threading
+		OMP_NUM_THREADS := $(_available_cores)
+	endif	
+else
+	OMP_NUM_THREADS := $(threads)
+endif
 
 ifeq "$(energy)" "1"
 	EN_FLAG := -D_ENERGY_MEASUREMENT
@@ -62,6 +66,7 @@ alg%: $(OBJ)/alg%.obj *.c Makefile
 	@echo -e "#available_cores: "$(_available_cores)
 	@echo -e "#available_threads: "$(_available_threads) 
 	@echo -e "args: "$(args)
+	@echo -e "OMP_NUM_THREADS: "$(OMP_NUM_THREADS)
 	PARAGRAPHER_LIB_FOLDER=paragrapher/lib64 LD_LIBRARY_PATH=$(LIB) $(OMP_VARS) $(OBJ)/alg$*.o $(args)
 
 all: paragrapher Makefile

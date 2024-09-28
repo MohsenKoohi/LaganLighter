@@ -111,7 +111,7 @@ void read_env_vars()
 	if(temp != NULL)
 		LL_GRAPH_RA_BIN_FOLDER = temp;
 
-	printf("\n\033[2;32mEnv Vars:\n\033[0;37m");
+	printf("\n\033[2;32mEnv Vars:\033[0;37m\n");
 	printf("    LL_INPUT_GRAPH_PATH:         %s\n", LL_INPUT_GRAPH_PATH);
 	printf("    LL_INPUT_GRAPH_BASE_NAME:    %s\n", LL_INPUT_GRAPH_BASE_NAME);
 	printf("    LL_INPUT_GRAPH_TYPE:         %s\n", LL_INPUT_GRAPH_TYPE);
