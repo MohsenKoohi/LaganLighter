@@ -138,24 +138,6 @@ double get_standard_deviation(double* data, int count)
 	return sqrt(sum / count);
 }
 
-int get_host_name(char* input,int in_size)
-{
-	int fd=open("/proc/sys/kernel/hostname", O_RDONLY);
-	if(fd<0)
-	{
-		printf("Can't open the /proc/sys/kernel/hostname : %d - %s\n",errno,strerror(errno));
-		return 0;
-	}
-
-	int count = read(fd, input, in_size);
-	if(count<in_size)
-		input[count]=0;
-
-	close(fd);
-
-	return count;
-}
-
 unsigned long get_nano_time()
 {
 	struct timespec ts;
@@ -336,12 +318,15 @@ long run_command(char* in_cmd, char* output, unsigned int output_size)
 {
 	assert(in_cmd != NULL);
 
+	char hostname[256]={0};
+	gethostname(hostname, 256);
+
 	int in_cmd_size = strlen(in_cmd);
 	char* cmd = malloc(in_cmd_size + 2 * 64);
 	assert(cmd != NULL);
 	
 	char* res_file = cmd + in_cmd_size + 64;
-	sprintf(res_file, "_temp_res_%lu.txt", get_nano_time());	
+	sprintf(res_file, "_temp_res_%s_%lu.txt", hostname, get_nano_time());	
 	sprintf(cmd, "%s 1>%s 2>&1", in_cmd, res_file);
 
 	int ret = system(cmd);

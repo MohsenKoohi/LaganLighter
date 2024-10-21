@@ -33,7 +33,7 @@ function ul2s()
 	echo "Arguments to be passed to this script:"
 	echo "  alg=algorithm-filename (with or without .c)"
 	echo "  df=path/to/datasets/folder (default ./data)"
-	echo "  make-flags=\"flags (e.g. \`no_ht\`, \`debug\`, and/or \`wait_passive\`) to be passed to the make, separated by space, and double quoted\" (default empty)"
+	echo "  make-flags=\"flags (e.g. \`threads\`, \`no_ht\`, \`energy\`,\`debug\`, and/or \`wait_passive\`) to be passed to the make, separated by space, and double quoted\" (default empty)"
 	echo "  program-args=\"arguemnts to be passed to the \`program\` by \`make\`, separated by space, and double quoted\" (default empty)"
 	echo "  sf=m (start from dataset m, numbers starting from 0, default: 0)"
 	echo "  sa=n (stop after processing dataset n, numbers starting from 0, default: -1)"
@@ -269,6 +269,7 @@ function ul2s()
 	# Header of report file
 		echo "$ALG, $REPORT_TITLE" > $report_path
 		echo -e "Machine: $hostname\nGCC: `gcc -dumpversion`\n" >> $report_path
+		echo -e "make-flags: "$MAKE_FLAGS"\nprogram-args: "$PROGRAM_ARGS >> $report_path
 		echo "Datasets: $SF - $SA" >> $report_path
 		c=$SF;
 		for ds in $datasets; do
