@@ -56,11 +56,11 @@ void read_env_vars()
 {
 	char* temp = getenv("LL_INPUT_GRAPH_PATH");
 	if(temp != NULL)
-		LL_INPUT_GRAPH_PATH = temp;
+		LL_INPUT_GRAPH_PATH = strdup(temp);
 
 	temp = getenv("LL_INPUT_GRAPH_TYPE");
 	if(temp != NULL)
-		LL_INPUT_GRAPH_TYPE = temp;
+		LL_INPUT_GRAPH_TYPE = strdup(temp);
 	
 	{
 		int len = strlen(LL_INPUT_GRAPH_PATH);
@@ -105,11 +105,11 @@ void read_env_vars()
 
 	temp = getenv("LL_OUTPUT_REPORT_PATH");
 	if(temp != NULL && strlen(temp) > 0)
-		LL_OUTPUT_REPORT_PATH = temp;
+		LL_OUTPUT_REPORT_PATH = strdup(temp);
 
 	temp = getenv("LL_GRAPH_RA_BIN_FOLDER");
 	if(temp != NULL)
-		LL_GRAPH_RA_BIN_FOLDER = temp;
+		LL_GRAPH_RA_BIN_FOLDER = strdup(temp);
 
 	printf("\n\033[2;32mEnv Vars:\033[0;37m\n");
 	printf("    LL_INPUT_GRAPH_PATH:         %s\n", LL_INPUT_GRAPH_PATH);

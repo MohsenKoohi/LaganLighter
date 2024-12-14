@@ -42,8 +42,9 @@ ifeq "$(debug)" "1"
 endif	
 
 FLAGS := $(EN_FLAG) -Wfatal-errors -lm -fopenmp -lpapi -lnuma -lparagrapher -lrt # -lpfm
+COMMON_C_FILES := $(shell find *.c ! -name 'alg*')
 
-$(OBJ)/alg%.obj: alg%.c *.c Makefile paragrapher FORCE
+$(OBJ)/alg%.obj: alg%.c $(COMMON_C_FILES) Makefile paragrapher FORCE
 	mkdir -p $(OBJ)
 	@if [ `$(GCC) -dumpversion | cut -f1 -d.` -le 8 ]; then\
 		$(GCC) -dumpversion; \
