@@ -322,10 +322,10 @@ long run_command(char* in_cmd, char* output, unsigned int output_size)
 	gethostname(hostname, 256);
 
 	int in_cmd_size = strlen(in_cmd);
-	char* cmd = malloc(in_cmd_size + 2 * 64);
+	char* cmd = malloc(in_cmd_size + 2 * 1024);
 	assert(cmd != NULL);
 	
-	char* res_file = cmd + in_cmd_size + 64;
+	char* res_file = cmd + in_cmd_size + 1024;
 	sprintf(res_file, "_temp_res_%s_%lu.txt", hostname, get_nano_time());	
 	sprintf(cmd, "%s 1>%s 2>&1", in_cmd, res_file);
 
