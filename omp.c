@@ -336,6 +336,8 @@ struct par_env* initialize_omp_par_env()
 			int count;
 
 			sprintf(file_name, "/sys/devices/system/cpu/cpu0/cache/index%d/type",i);
+			if(access(file_name, F_OK) != 0)
+				continue;
 			char cache_type[255];
 			count = get_file_contents(file_name, cache_type, 255);
 			assert(count > 0);
