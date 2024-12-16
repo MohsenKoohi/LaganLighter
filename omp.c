@@ -198,6 +198,8 @@ struct par_env
 
 	unsigned int nodes_count;
 	unsigned int cpus_count;
+	unsigned int available_cpus_count;
+	unsigned int* available_cpus;
 
 	//converting cpu_id to node_id
 	unsigned int * cpu2node;
@@ -445,7 +447,28 @@ struct par_env* initialize_omp_par_env()
 
 	// CPUs
 		pe->cpus_count = numa_num_configured_cpus();
-		printf("# CPUS: %'u\n",pe->cpus_count);
+		printf("# Total CPUs: %'u\n",pe->cpus_count);
+
+		// Identifying available CPUs
+		pe->available_cpus = calloc(sizeof(unsigned int), pe->cpus_count);
+		pe->available_cpus_count = 0;
+		assert(pe->available_cpus != NULL);
+		printf("\033[1;33mAvailable CPUs\033[;37m:\n");
+		for(unsigned int c = 0; c < pe->cpus_count; c++)
+		{
+			cpu_set_t cs;
+			CPU_ZERO(&cs);
+			CPU_SET(c, &cs);
+			int ret = sched_setaffinity(0, sizeof(cpu_set_t), &cs);
+			if(ret == 0)
+			{
+				pe->available_cpus_count++;
+				pe->available_cpus[c] = 1;
+				printf("%u, ", c);
+			}
+		}
+		printf("\n\033[1;33mAvailable CPUs count\033[;37m: %u\n\n", pe->available_cpus_count);
+
 		pe->cpu2node=calloc(pe->cpus_count, sizeof(unsigned int));
 		struct bitmask *bm = numa_allocate_cpumask();
 
@@ -463,7 +486,7 @@ struct par_env* initialize_omp_par_env()
 
 			printf("CPUs on node \033[1;35m%d\033[0;37m : ",i);
 			for(int j=0; j < pe->cpus_count; j++)
-				if(numa_bitmask_isbitset(bm, j))
+				if(numa_bitmask_isbitset(bm, j) && pe->available_cpus[j] == 1)
 				{
 					pe->cpu2node[j]=i;
 					pe->node_cpus[i][pe->node_cpus_length[i]++]=j;
@@ -554,8 +577,11 @@ struct par_env* initialize_omp_par_env()
 							assert(sg_set[cpu_id] == 0);
 							sg_set[cpu_id] = 1;
 
-							pe->sibling_groups_cpus[sgc_index] = cpu_id;
-							sgc_index++;
+							if(pe->available_cpus[cpu_id] == 1)
+							{
+								pe->sibling_groups_cpus[sgc_index] = cpu_id;
+								sgc_index++;
+							}
 						}
 
 						last_id += 4;
@@ -571,10 +597,13 @@ struct par_env* initialize_omp_par_env()
 
 			pe->node_sibling_groups_start_ID[n + 1] = g_counter;
 		}
-		assert(g_counter == pe->sibling_groups_count);
-		assert(sgc_index == pe->cpus_count);
+		
+		if(pe->cpus_count == pe->available_cpus_count)
+			assert(g_counter == pe->sibling_groups_count);
+		assert(sgc_index == pe->available_cpus_count);
 		for(int c = 0; c < pe->cpus_count; c++)
-			assert(sg_set[c] == 1);
+			if(pe->available_cpus[c])
+				assert(sg_set[c] == 1);
 		
 		free(sg_set);
 		sg_set = NULL;
@@ -632,7 +661,7 @@ struct par_env* initialize_omp_par_env()
 			int* t2c = calloc(sizeof(int), pe->threads_count);  // thread to cpu
 			assert(t2c != NULL);
 
-			unsigned int remained_cpus = pe->cpus_count;
+			unsigned int remained_cpus = pe->available_cpus_count;
 			unsigned int remained_threads = pe->threads_count;
 
 			for(int n = 0; n < pe->nodes_count; n++)

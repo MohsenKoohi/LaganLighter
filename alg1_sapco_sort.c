@@ -38,7 +38,7 @@ int main(int argc, char** args)
 		struct ll_400_graph* csr_graph = graph;
 		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",LL_INPUT_GRAPH_PATH,csr_graph->vertices_count,csr_graph->edges_count);
 
-		struct ll_400_graph* csc_graph = atomic_transpose(pe, csr_graph, 8U, NULL); // bit 3: do not write edges
+		struct ll_400_graph* csc_graph = atomic_transpose(pe, csr_graph, 8U); // bit 3: do not write edges
 		printf("CSC: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",LL_INPUT_GRAPH_PATH,csc_graph->vertices_count,csc_graph->edges_count);
 
 	// Creating the reordering array
