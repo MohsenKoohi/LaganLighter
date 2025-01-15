@@ -5,11 +5,14 @@
 This repository contains the shared-memory CPU-based soure code of the LaganLighter project: https://blogs.qub.ac.uk/DIPSA/LaganLighter .   
 
 ### Algorithms in This Repo
- - [SAPCo Sort](https://blogs.qub.ac.uk/DIPSA/Sapco-Sort-Optimizing-Degree-Ordering-For-Power-Law-Graphs/): `alg1_sapco_sort`
- - [Thrifty Label Propagation Connected Components](https://blogs.qub.ac.uk/DIPSA/Thrifty-Label-Propagation-Fast-Connected-Components-for-Skewed-Degree-Graphs/): `alg2_thrifty`
- - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](https://blogs.qub.ac.uk/DIPSA/MASTIFF-Structure-Aware-Minimum-Spanning-Tree-Forest/): `alg3_mastiff`
- - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](https://blogs.qub.ac.uk/DIPSA/Exploiting-in-Hub-Temporal-Locality-in-SpMV-based-Graph-Processing/): to be added
- - [LOTUS: Locality Optimizing Trinagle Counting](https://blogs.qub.ac.uk/DIPSA/LOTUS-Locality-Optimizing-Triangle-Counting/): to be added
+ - [SAPCo Sort, Parallel Counting Sort for Data with Skewed Frequency Distribution](docs/1.0-sapco.md): `alg1_sapco_sort`
+ - [Thrifty Label Propagation Connected Components](docs/2.0-thrifty.md): `alg2_thrifty`
+ - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](docs/3.0-mastiff.md): `alg3_mastiff`
+ - [Random Vertex Relabelling](docs/4.0-random-relabeling.md): `alg4_randomize`
+ - [Random Memory Benchmarking](docs/5.0-random-mem-bench.md): `alg5_rand_mem_bench`
+ - [PoTra Graph Transposition](docs/6.0-potra.md): `alg6_potra`
+  - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](docs/7.0-ihtl.md): to be added
+ - [LOTUS: Locality Optimizing Trinagle Counting](docs/8.0-lotus.md): to be added
 
 ### Cloning 
 `git clone https://github.com/MohsenKoohi/LaganLighter.git --recursive`
