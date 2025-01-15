@@ -9,3 +9,4 @@
 - [Alg. 2: Thrifty](2.0-thrifty.md)
 - [Alg. 3: MASTIFF](3.0-mastiff.md)
 - [Alg. 4: Random Vertex Relabelling](4.0-random-relabeling.md)
+- [Alg. 5: Random Memory Benchmarking](5.0-random-mem-bench.md)
