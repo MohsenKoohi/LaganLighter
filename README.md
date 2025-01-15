@@ -11,7 +11,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  - [Random Vertex Relabelling](docs/4.0-random-relabeling.md): `alg4_randomize`
  - [Random Memory Benchmarking](docs/5.0-random-mem-bench.md): `alg5_rand_mem_bench`
  - [PoTra Graph Transposition](docs/6.0-potra.md): `alg6_potra`
-  - [iHTL: in-Hub Temporal Locality in SpMV (Sparse-Matrix Vector Multiplication) based Graph Processing](docs/7.0-ihtl.md): to be added
+  - [iHTL: in-Hub Temporal Locality in SpMV](docs/7.0-ihtl.md): to be added
  - [LOTUS: Locality Optimizing Trinagle Counting](docs/8.0-lotus.md): to be added
 
 ### Cloning 
