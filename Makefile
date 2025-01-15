@@ -56,7 +56,7 @@ $(OBJ)/alg%.obj: alg%.c $(COMMON_C_FILES) Makefile paragrapher FORCE
 	$(GCC) $(INCLUDE_HEADER) $(FLAGS) $< -std=gnu11  $(COMPILE_TYPE) -c -o $@ 
 	@echo 
 
-alg%: $(OBJ)/alg%.obj *.c Makefile
+alg%: $(OBJ)/alg%.obj $(COMMON_C_FILES) Makefile
 	@echo Building $@ 
 	$(GCC) $(INCLUDE_LIBS) $(OBJ)/$@.obj $(FLAGS) -o $(OBJ)/alg$*.o
 	@echo ""
@@ -82,6 +82,10 @@ download_sample_WG400:
 		wget -P data "http://data.law.di.unimi.it/webdata/cnr-2000/cnr-2000.properties"; \
 		echo -e "--------------------\n";\
 	fi
+
+alg5_rand_mem_bench.c: benchmarks/l3_rwa.tpl.c benchmarks/l3_rwa_builder.sh
+	@echo -e "\nCreating the benchmarks"
+	benchmarks/l3_rwa_builder.sh
 
 tests:
 	make $(subst .c,,$(shell ls alg*.c))

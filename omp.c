@@ -909,6 +909,13 @@ void numa_interleave_allocated_memory(void* addr, unsigned long mem_size)
 	return;
 }
 
+unsigned long get_swap_size()
+{
+	char temp[256];
+	long ret = run_command("free -k | grep Swap | sed -r 's/\\s+/ /g' | cut -f2 -d' '", temp, 256);
+	return 1024UL * atol(temp);
+}
+
 unsigned long get_free_mem()
 {
 	unsigned int nodes_count = numa_num_task_nodes();
