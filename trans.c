@@ -17,6 +17,7 @@
 #include "omp.c"
 #include "partitioning.c"
 #include "relabel.c"
+#include "energy.c"
 
 void sort_neighbor_lists(struct par_env* pe, struct ll_400_graph* g)
 {
