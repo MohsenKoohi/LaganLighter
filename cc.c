@@ -1056,6 +1056,9 @@ void cc_release(struct ll_400_graph* g, unsigned int* cc)
 	eprint    = {1612.01514},
 	}
 
+ 	g:
+  		Should be symmetric, otherwise `if(neighbour >= v) break;` should be removed.
+
 	flags:
 		bit 0: print stats
 		bit 1: do not reset papi
@@ -1136,7 +1139,7 @@ unsigned int* cc_jt(struct par_env* pe, struct ll_400_graph* g, unsigned int fla
 					for(unsigned long e = g->offsets_list[v]; e < g->offsets_list[v + 1]; e++)
 					{
 						unsigned int neighbour = g->edges_list[e];
-						if(neighbour >= v)
+						if(neighbour >= v)    // These two lines should be removed for non-symmetric inputs
 							break;
 
 						unsigned int x = v;
