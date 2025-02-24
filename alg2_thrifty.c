@@ -84,7 +84,7 @@ int main(int argc, char** args)
 		for(unsigned v = 0; v < graph->vertices_count; v++)
 			assert(cc_t[v] == cc_t[cc_p[v]]);
 		
-		/* (2) It is also required to check if two vertices are on different components (i.e., having the same cc_p), 
+		/* (2) It is also required to check if two vertices are on different components (i.e., not having the same cc_p), 
 		they do not have the same cc_t. This is checked by matching the total number of compoents. 
 		If two vertices are wrongly identified to have the same cc_t values, then either (i) we have 
 		different number of compoenents, or (ii) we have the same number of components. Now, we prove that 
