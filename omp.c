@@ -34,14 +34,16 @@ unsigned int papi_events []= {
 #define PT(step_name) \
 	printf("%-60s\t\t %'10.2f (ms)\n",step_name, mt/1e6); 
 
+// Normalized deviation from maximum as load imbalance
 double get_idle_percentage(unsigned long nt, unsigned long* threads_nt, unsigned int threads_count)
 { 
-	unsigned long idle = 0; 
+	unsigned long sum = 0; 
 	for(unsigned int t=0; t<threads_count; t++)
-		idle += nt - threads_nt[t]; 
-	idle /= threads_count; 
-	return 100.0 * idle / nt;
+		sum += pow(nt - (double)threads_nt[t], 2);
+	double idle = sqrt(sum / threads_count) / nt; 
+	return 100.0 * idle;
 } 
+
 
 unsigned long omp_get_thread_num_ulong()
 {
