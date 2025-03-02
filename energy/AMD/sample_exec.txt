@@ -1,0 +1,8 @@
+core ; energy_joules       ;
+core-0;      1467.8919067383;
+core-2;      1574.3650665283;
+core-4;      1647.8585052490;
+core-6;      2148.2888183594;
+
+package ; cores_joules        ; package_joules      ;
+package-0;      6838.4042968750;     30115.8827819824;

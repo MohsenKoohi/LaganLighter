@@ -1,0 +1,18 @@
+total_cores: 8
+total_packages: 1
+first core of package 0: 0
+
+(core, package, core_is_first_sibling):
+(  0,   0,    1)     (  1,  -1,    0)     (  2,   0,    1)     (  3,  -1,    0)     (  4,   0,    1)    
+(  5,  -1,    0)     (  6,   0,    1)     (  7,  -1,    0)    
+
+Energy_unit: 0.0000152588
+
+core ; energy_joules       ;
+    0;      1467.9207305908;
+    2;      1574.4046020508;
+    4;      1647.8907623291;
+    6;      2148.3318634033;
+
+package ; cores_joules        ; package_joules      ;
+       0;      6838.5479583740;     30121.1956939697;
