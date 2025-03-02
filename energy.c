@@ -327,7 +327,7 @@ struct energy_measurement* energy_measurement_init()
 	{	
 		if(atoi(em->uts.release) <= 4 )
 			// Kelvin Intel
-			sprintf(em->read_counters_command, "./rapl_read.sh");
+			sprintf(em->read_counters_command, "energy/Intel/rapl_read.sh");
 		else
 			// HPDC Intel
 			{
