@@ -11,3 +11,5 @@
 - [Alg. 4: Random Vertex Relabelling](4.0-random-relabeling.md)
 - [Alg. 5: Random Memory Benchmarking](5.0-random-mem-bench.md)
 - [Alg. 6: PoTra, Graph Transposition](6.0-potra.md)
+- [Alg. 7: iHTL, Locality Optimizing SpMV](7.0-ihtl.md)
+- [Alg. 8: LOTUS, Locality Optimizing Triangle Counting](8.0-lotus.md)
