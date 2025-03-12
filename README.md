@@ -46,7 +46,7 @@ particularly:
 
 Please refer to [Graph Loading Documentation](docs/0.2-loading.md).
 
-### Processing Multiple Graphs 
+### Evaluating a Set of Graph Datasets
 
 Please refer to [Launcher Script Documentaion](docs/0.3-launcher.md).
  
