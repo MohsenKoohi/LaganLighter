@@ -6,7 +6,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
 
 ### Algorithms in This Repo
  - [SAPCo Sort, Parallel Counting Sort for Data with Skewed Frequency Distribution](docs/1.0-sapco.md): `alg1_sapco_sort`
- - [Thrifty Label Propagation Connected Components](docs/2.0-thrifty.md): `alg2_thrifty`
+ - [Thrifty Label Propagation Weakly Connected Components](docs/2.0-thrifty.md): `alg2_thrifty`
  - [MASTIFF: Structure-Aware Mimum Spanning Tree/Forest](docs/3.0-mastiff.md): `alg3_mastiff`
  - [Random Vertex Relabelling](docs/4.0-random-relabeling.md): `alg4_randomize`
  - [Random Memory Benchmarking](docs/5.0-random-mem-bench.md): `alg5_rand_mem_bench`
