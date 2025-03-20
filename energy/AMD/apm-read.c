@@ -1,6 +1,6 @@
 /*
 
-AMP: Application Power Management
+AMP (should be APM): Application Power Management
 
 This program reads the energy counters of AMD processors, mainly family 17h model 31h and architectures with compatible MSR numbers.
 We have changed the following source code published under GNU GPL2.
