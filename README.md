@@ -15,7 +15,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  - [LOTUS: Locality Optimizing Trinagle Counting](docs/8.0-lotus.md): to be added
 
 ### Documentation
-Please refer to [LaganLighter Documentation](docs/readme.md)
+**[docs/readme.md](docs/readme.md)**
 
 ### Cloning 
 `git clone https://github.com/MohsenKoohi/LaganLighter.git --recursive`
