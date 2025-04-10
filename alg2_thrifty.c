@@ -132,10 +132,10 @@ int main(int argc, char** args)
 				name = strndup(name, strrchr(name, '.') - name);
 			
 			fprintf(out, "%-20s; %'8s; %'8s; %'13.1f;", 
-				name, ul2s(graph->vertices_count, temp1), ul2s(graph->edges_count, temp2), exec_info[0] / 1e6);
+				name, ul2s(graph->vertices_count, temp1), ul2s(graph->edges_count, temp2), exec_info[10 + 0] / 1e6);
 			if(exec_info)
 				for(unsigned int i=0; i<pe->hw_events_count; i++)					
-					fprintf(out, " %'8s;", ul2s(exec_info[i + 1], temp1));
+					fprintf(out, " %'8s;", ul2s(exec_info[10 + i + 1], temp1));
 			fprintf(out, "\n");
 
 			if(strcmp(LL_INPUT_GRAPH_TYPE,"text") == 0)
