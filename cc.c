@@ -170,6 +170,7 @@ unsigned int* cc_pull(struct par_env* pe, struct ll_400_graph* g, unsigned int f
 		[0]: exec time
 		[1-7]: papi events
 		[8]: push max-degree
+		[9]: ID of vertex with max degree, i.e., with zero CC val.
 */
 unsigned int* cc_thrifty_400(struct par_env* pe, struct ll_400_graph* g, unsigned int flags, unsigned long* exec_info, unsigned int* ccs_p)
 {
@@ -243,6 +244,8 @@ unsigned int* cc_thrifty_400(struct par_env* pe, struct ll_400_graph* g, unsigne
 			// Plant the zero label
 			cc[max_vals[1]] = 0;
 			max_degree_id = max_vals[1];
+			if(exec_info)
+				exec_info[9] = max_degree_id;
 		}
 
 	// Initial Push: Propagate the zero label to the neighbours of the max-degree vertex

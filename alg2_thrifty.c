@@ -50,7 +50,7 @@ int main(int argc, char** args)
 			store_shm_ll_400_graph(pe, LL_INPUT_GRAPH_PATH, graph, 0);
 		
 	// Exec info
-		unsigned long* exec_info = calloc(sizeof(unsigned long), 20);
+		unsigned long* exec_info = calloc(sizeof(unsigned long), 32);
 		assert(exec_info != NULL);
 
 	// Symmetrizing the graph
@@ -77,12 +77,20 @@ int main(int argc, char** args)
 		unsigned int* cc_p = cc_pull(pe, graph, flags, exec_info, &ccs_p);
 		unsigned int ccs_t = 0;
 		unsigned int* cc_t = cc_thrifty_400(pe, graph, flags, &exec_info[10], &ccs_t);
+		unsigned int max_degree_ID  = exec_info[10 + 9];
 		
 	// Validating
 		// (1) If two vertices are on the same componenet (i.e., they have the same cc_p), they should have the same cc_t
 		#pragma omp parallel for
 		for(unsigned v = 0; v < graph->vertices_count; v++)
+		{
 			assert(cc_t[v] == cc_t[cc_p[v]]);
+			
+			if(cc_t[v] == 0)
+				assert(cc_p[v] == cc_p[max_degree_ID]);
+			else
+				assert(cc_p[v] == cc_p[cc_t[v] - 1]);
+		}
 		
 		/* (2) It is also required to check if two vertices are on different components (i.e., not having the same cc_p), 
 		they do not have the same cc_t. This is checked by matching the total number of compoents. 
