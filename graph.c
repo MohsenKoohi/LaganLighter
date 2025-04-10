@@ -364,6 +364,9 @@ void __ll_400_webgraph_callback(paragrapher_read_request* req, paragrapher_edge_
 	`flags`:
 		bit 0: 
 			Read from storage. Do not use the copy in /dev/shm (if it exists).
+
+		bit 1:
+			Do not use PG-FUSE
 		
 		bit 31: 
 			Will be set by the function if the graph has been mapped from a copy in /dev/shm. 
@@ -392,8 +395,18 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type, unsigned i
 			assert(0 && "get_ll_400_webgraph does not work for this type of graph.");
 			return NULL;
 		}
-		paragrapher_graph* graph = paragrapher_open_graph(file_name, pgt, NULL, 0);
+
+		void** open_args = calloc(10, sizeof(void*));
+		assert(open_args != NULL);
+		int open_argc = 0;
+		if(flags == NULL || ((*flags & 2U) == 0) )
+			open_args[open_argc++] = "USE_PG_FUSE";
+	
+		paragrapher_graph* graph = paragrapher_open_graph(file_name, pgt, open_args, open_argc);
 		assert(graph != NULL);
+
+		free(open_args);
+		open_args = NULL;
 
 		unsigned long vertices_count = 0;
 		unsigned long edges_count = 0;	
