@@ -93,7 +93,7 @@ tests:
 clean:
 	rm -f $(OBJ)/*.obj $(OBJ)/*.o
 	make -C paragrapher clean
-	touch *.c 
+	touch *.c
 
 clean_shm_graphs:
 	rm -f /dev/shm/ll_graph*
