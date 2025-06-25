@@ -59,6 +59,7 @@ int relabeling_array_validate(struct par_env* pe, unsigned int* RA, unsigned int
 
 	flags:
 		0: print details
+		1: do not reset PAPI
 
 	exec_info: if not NULL, will have 
 		[0]: exec time
@@ -76,11 +77,12 @@ unsigned int* sapco_sort_degree_ordering(struct par_env* pe, struct ll_400_graph
 			printf("\n\033[3;33msapco_sort_degree_ordering\033[0;37m using \033[3;33m%d\033[0;37m threads.\n", pe->threads_count);
 
 		// Reset papi
-		#pragma omp parallel 
-		{
-			unsigned tid = omp_get_thread_num();
-			papi_reset(pe->papi_args[tid]);
-		}
+		if(!(flags & 2U))
+			#pragma omp parallel 
+			{
+				unsigned tid = omp_get_thread_num();
+				papi_reset(pe->papi_args[tid]);
+			}
 
 	// (1.2) Identifying the max_degree
 		unsigned long max_degree = 0;

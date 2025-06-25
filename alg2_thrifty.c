@@ -41,6 +41,7 @@ int main(int argc, char** args)
 			// Reading a WebGraph using ParaGrapher library
 			graph = get_ll_400_webgraph(LL_INPUT_GRAPH_PATH, LL_INPUT_GRAPH_TYPE, &read_flags);
 		assert(graph != NULL);
+		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n", LL_INPUT_GRAPH_PATH, graph->vertices_count, graph->edges_count);
 
 	// Initializing omp
 		struct par_env* pe= initialize_omp_par_env();
@@ -53,9 +54,7 @@ int main(int argc, char** args)
 		unsigned long* exec_info = calloc(sizeof(unsigned long), 32);
 		assert(exec_info != NULL);
 
-	// Symmetrizing the graph
-		printf("CSR: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n", LL_INPUT_GRAPH_PATH, graph->vertices_count, graph->edges_count);
-		
+	// Symmetrizing the graph		
 		if(!LL_INPUT_GRAPH_IS_SYMMETRIC)
 		{
 			struct ll_400_graph* sym_graph = symmetrize_graph(pe, graph,  2U + 4U); // sort neighbour-lists and remove self-edges
@@ -67,8 +66,7 @@ int main(int argc, char** args)
 					release_numa_interleaved_ll_400_graph(graph);
 				graph = sym_graph;
 				sym_graph = NULL;
-		}
-		
+		}		
 		printf("SYM: %-30s;\t |V|: %'20lu;\t |E|:%'20lu;\n",LL_INPUT_GRAPH_PATH, graph->vertices_count, graph->edges_count);
 
 	// CC
