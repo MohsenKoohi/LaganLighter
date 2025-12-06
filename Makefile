@@ -20,11 +20,11 @@ ifeq "$(wait_passive)" "1"
 	OMP_WAIT_POLICY := passive
 endif
 
-OMP_NUM_THREADS := $(_available_threads)
+OMP_NUM_THREADS := $(_available_cores)
 ifeq "$(threads)" ""
-	ifeq "$(no_ht)" "1" 
-		# without hyper-threading
-		OMP_NUM_THREADS := $(_available_cores)
+	ifeq "$(hyperthreading)" "1" 
+		# with hyper-threading
+		OMP_NUM_THREADS := $(_available_threads)
 	endif	
 else
 	OMP_NUM_THREADS := $(threads)
