@@ -506,7 +506,14 @@ struct ll_400_graph* get_ll_400_webgraph(char* file_name, char* type, unsigned i
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
+				time_t t = time(NULL);
+				struct tm tm;
+				localtime_r(&t, &tm);
+				char timebuf[32];
+				strftime(timebuf, sizeof(timebuf), "%y/%m/%d %H:%M:%S", &tm);
+
+				printf("  [%s] Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", 
+					timebuf, status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
 				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
@@ -723,7 +730,14 @@ struct ll_404_graph* get_ll_404_webgraph(char* file_name, char* type, unsigned i
 
 			if(read_edges >= next_edge_limit_print)
 			{
-				printf("  Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
+				time_t t = time(NULL);
+				struct tm tm;
+				localtime_r(&t, &tm);
+				char timebuf[32];
+				strftime(timebuf, sizeof(timebuf), "%y/%m/%d %H:%M:%S", &tm);
+
+				printf("  [%s] Reading ..., status: %'ld, read_edges: %'15lu (%.1f%%), completed callbacks: %'lu/%'lu .\n", 
+					timebuf, status, read_edges, 100.0 *read_edges/edges_count, completed_callbacks_count, callbacks_count);
 
 				next_edge_limit_print = read_edges + 0.05 * edges_count;
 			}
