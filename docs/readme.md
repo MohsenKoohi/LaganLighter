@@ -13,3 +13,6 @@
 - [Alg. 6: PoTra, Graph Transposition](6.0-potra.md)
 - [Alg. 7: iHTL, Locality Optimizing SpMV](7.0-ihtl.md)
 - [Alg. 8: LOTUS, Locality Optimizing Triangle Counting](8.0-lotus.md)
+- [Skipper: Single-Pass Asynchronous Maximal Matching](9.0-skipper.md): to be added
+- [Orca: Single-Pass Asynchronous Maximal Independent Set](10.0-orca.md): to be added
+- [Transform (symmetrize/transpose/randomzie) and Store in CompBin Format](11.0-compbin.md)

@@ -15,7 +15,7 @@ This repository contains the shared-memory CPU-based soure code of the LaganLigh
  - [LOTUS: Locality Optimizing Trinagle Counting](docs/8.0-lotus.md): to be added
  - [Skipper: Single-Pass Asynchronous Maximal Matching](docs/9.0-skipper.md): to be added
  - [Orca: Single-Pass Asynchronous Maximal Independent Set](docs/10.0-orca.md): to be added
- - [Transform (symmetrize/transpose/randomzie) and Store in CompBin Format](docs/11.0-compbin.md): to be added
+ - [Transform (symmetrize/transpose/randomzie) and Store in CompBin Format](docs/11.0-compbin.md): `alg11_compbin`
 
 ### Documentation
 **[docs/readme.md](docs/readme.md)**
