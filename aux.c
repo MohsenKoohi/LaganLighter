@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
+#include <sys/resource.h>
 
 #define max(a,b)             \
 ({                           \
